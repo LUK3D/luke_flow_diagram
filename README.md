@@ -1,11 +1,10 @@
 # Luke Flow Diagram
 
-![alt text](screenshots/01.png)
+![Flow Diagram Screenshot](https://raw.githubusercontent.com/LUK3D/luke_flow_diagram/refs/heads/master/screenshots/01.png)
 
 A customizable, interactive **Flutter flow diagram library** inspired by React Flow.  
 Supports drag & drop nodes, sockets, edges (Bezier), pan & zoom, and dynamic connections.
 
----
 
 ## 🚀 Features
 
@@ -18,7 +17,6 @@ Supports drag & drop nodes, sockets, edges (Bezier), pan & zoom, and dynamic con
 
 - Much more....
 
----
 
 ## 📦 Installation
 
@@ -29,7 +27,7 @@ dependencies:
   luke_flow_diagram: version
 ```
 
-🛠️ Usage
+## Usage
 
 ```dart
 
@@ -39,7 +37,7 @@ class MyFlowCanvas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = LukeFlowCanvasController<DataModelExample>();
-    
+
     return LukeFlowCanvas<DataModelExample>(
         controller: controller,
         nodes: nodes,
@@ -72,7 +70,9 @@ class MyFlowCanvas extends StatelessWidget {
 
 ```
 
-✨ Customization
+---
+
+## Customization
 
 Grid background: density, color, dots vs lines
 

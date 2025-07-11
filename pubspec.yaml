@@ -1,6 +1,6 @@
 name: luke_flow_diagram
 description: "A customizable flow diagram canvas for Flutter, inspired by React Flow."
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/LUK3D/luke_flow_diagram
 repository: https://github.com/LUK3D/luke_flow_diagram
 issue_tracker: https://github.com/LUK3D/luke_flow_diagram/issues
