@@ -37,7 +37,7 @@ class LukeFlowDiagram extends StatefulWidget {
 
 class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
   List<EdgeConnectionsModel> connections = [];
-  late final nodes = List.generate(1000, (index) => index)
+  late final nodes = List.generate(5, (index) => index)
       .map(
         (i) => NodeModel(
           data: DataModelExample(

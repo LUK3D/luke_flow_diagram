@@ -95,8 +95,8 @@ class _NodeWidgetState<T> extends State<NodeWidget<T>> {
                   height: widget.socketHeight,
                   decoration: BoxDecoration(
                     color: socket.type == NodeSocketType.output
-                        ? Colors.green
-                        : Colors.blue,
+                        ? Colors.pink
+                        : Colors.purple,
                     borderRadius: BorderRadius.circular(widget.socketRadius),
                   ),
                 ),
