@@ -47,7 +47,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
       id: nodeId,
       inputSockets: [
         NodeSocketModel(
-          maxConnections: 1,
+          connectionLimit: 1,
           nodeId: nodeId,
           id: UniqueKey().toString(),
           type: NodeSocketType.input,
@@ -57,7 +57,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
       ],
       outputSockets: [
         NodeSocketModel(
-          maxConnections: 2,
+          connectionLimit: 2,
           nodeId: nodeId,
           id: UniqueKey().toString(),
           type: NodeSocketType.output,
@@ -102,7 +102,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                         position: getRandomPositionNearCenter(spread: 1000),
                         inputSockets: [
                           NodeSocketModel(
-                            maxConnections: 1,
+                            connectionLimit: 1,
                             nodeId: nodeId,
                             id: UniqueKey().toString(),
                             type: NodeSocketType.input,
@@ -112,7 +112,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                         ],
                         outputSockets: [
                           NodeSocketModel(
-                            maxConnections: 2,
+                            connectionLimit: 2,
                             nodeId: nodeId,
                             id: UniqueKey().toString(),
                             type: NodeSocketType.output,

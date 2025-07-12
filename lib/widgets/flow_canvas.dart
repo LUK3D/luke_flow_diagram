@@ -153,13 +153,14 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
       target: socket,
     );
 
-    if ((previousConnectionsInput.length) >= socket.maxConnections) {
+    if ((previousConnectionsInput.length) >= socket.connectionLimit) {
       widget.onConnectionError?.call(connection);
       return;
     }
 
     /// Remove 1 because when dragi
-    if ((previousConnectionsOutput.length - 1) >= initialSlot!.maxConnections) {
+    if ((previousConnectionsOutput.length - 1) >=
+        initialSlot!.connectionLimit) {
       widget.onConnectionError?.call(connection);
       return;
     }
