@@ -55,6 +55,16 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
           data: {},
         ),
       ],
+      outputSockets: [
+        NodeSocketModel(
+          maxConnections: 2,
+          nodeId: nodeId,
+          id: UniqueKey().toString(),
+          type: NodeSocketType.output,
+          position: Vector2.zero,
+          data: {},
+        ),
+      ],
       data: DataModelExample(
         id: '$i',
         name: 'Node $i',
@@ -99,14 +109,6 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                             position: Vector2.zero,
                             data: {},
                           ),
-                          NodeSocketModel(
-                            maxConnections: 1,
-                            nodeId: nodeId,
-                            id: UniqueKey().toString(),
-                            type: NodeSocketType.input,
-                            position: Vector2.zero,
-                            data: {},
-                          ),
                         ],
                         outputSockets: [
                           NodeSocketModel(
@@ -118,6 +120,11 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                             data: {},
                           ),
                         ],
+                        data: DataModelExample(
+                          id: '${nodes.length}',
+                          name: 'Node ${nodes.length}',
+                          description: 'This is the first node',
+                        ),
                       ),
                     );
                   },
