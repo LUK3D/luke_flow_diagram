@@ -151,7 +151,53 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
               controller: controller,
               nodes: nodes,
               initialConnections: connections,
+              onEdgeDrop: (source, dropPosition) {
+                /// You can create a new node when you drop the connection edge on the canvas by using the onEdgeDrop .
+                final nodeId = UniqueKey().toString();
+
+                /// Create new sockets for the new node
+                final inputSocket = NodeSocketModel(
+                  nodeId: nodeId,
+                  position: Vector2.zero,
+                  type: NodeSocketType.input,
+                );
+                final outputSocket = NodeSocketModel(
+                  nodeId: nodeId,
+                  position: Vector2.zero,
+                  type: NodeSocketType.output,
+                );
+
+                controller.addNodes([
+                  NodeModel(
+                    id: nodeId,
+                    position: dropPosition,
+                    inputSockets: [inputSocket],
+                    outputSockets: [outputSocket],
+                    data: DataModelExample(
+                      id: '${nodes.length}',
+                      name: 'Node ${nodes.length}',
+                      description: 'This is the first node',
+                    ),
+                  ),
+                ]);
+
+                /// Wait for the node to be added before creating the connection
+                Future.delayed(Duration(milliseconds: 100), () {
+                  controller.addConnection(
+                    EdgeConnectionsModel(
+                      source: source,
+                      target: source.type == NodeSocketType.input
+                          ? outputSocket
+                          : inputSocket,
+                    ),
+                  );
+
+                  /// Trigger a manual update to force the edges to update
+                  controller.updateNodesPosition(nodes);
+                });
+              },
               onConnectionError: (connection) {
+                /// This function can be used to handle connection limit error
                 debugPrint(
                   "ERROR CONNECTING ${connection.source.id} to ${connection.target.id}",
                 );
