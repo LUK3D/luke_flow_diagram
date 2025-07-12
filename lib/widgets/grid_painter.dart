@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/grid_background_settings.dart';
 
 class GridPainter extends CustomPainter {
   final double xDensity;
@@ -64,40 +65,30 @@ class GridPainter extends CustomPainter {
   }
 }
 
-class GridBackground extends StatelessWidget {
-  final double xDensity;
-  final double yDensity;
-  final bool? showLines;
-  final bool? showDots;
-  final Color? lineColor;
-  final double? lineWidth;
-  final double? dotRadius;
-  final Color? dotColor;
+class BackgroundGrid extends StatelessWidget {
+  final BackgroundGridSettings settings;
 
-  const GridBackground({
+  const BackgroundGrid({
     super.key,
-    required this.xDensity,
-    required this.yDensity,
-    this.showLines,
-    this.showDots,
-    this.lineColor,
-    this.lineWidth,
-    this.dotRadius,
-    this.dotColor,
+    this.settings = const BackgroundGridSettings(
+      xDensity: 15.0,
+      yDensity: 15.0,
+      showLines: false,
+    ),
   });
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: GridPainter(
-        xDensity: xDensity,
-        yDensity: yDensity,
-        lineColor: lineColor ?? Colors.grey.withAlpha(150),
-        lineWidth: lineWidth ?? 0.5,
-        showDots: showDots ?? false,
-        showLines: showLines ?? true,
-        dotColor: dotColor ?? Colors.grey.withAlpha(150),
-        dotRadius: dotRadius ?? 1.5,
+        xDensity: settings.xDensity,
+        yDensity: settings.yDensity,
+        lineColor: settings.lineColor ?? Colors.grey.withAlpha(150),
+        lineWidth: settings.lineWidth ?? 0.5,
+        showDots: settings.showDots ?? false,
+        showLines: settings.showLines ?? true,
+        dotColor: settings.dotColor ?? Colors.grey.withAlpha(150),
+        dotRadius: settings.dotRadius ?? 1.5,
       ),
       size: Size.infinite,
     );

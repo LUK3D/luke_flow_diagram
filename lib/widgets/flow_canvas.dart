@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:luke_flow_diagram/models/edge_connections_model.dart';
+import 'package:luke_flow_diagram/models/grid_background_settings.dart';
 import 'package:luke_flow_diagram/models/node_model.dart';
 import 'package:luke_flow_diagram/utils/math.dart';
 import 'package:luke_flow_diagram/widgets/edge.dart';
@@ -52,6 +53,8 @@ class LukeFlowCanvas<T> extends StatefulWidget {
   /// The radius of each socket (used for detecting interactions).
   final double socketRadius;
 
+  final BackgroundGridSettings? bacgrkoundGridSettings;
+
   const LukeFlowCanvas({
     super.key,
     required this.nodes,
@@ -66,6 +69,7 @@ class LukeFlowCanvas<T> extends StatefulWidget {
     this.width = 2024 * 5,
     this.height = 2024 * 5,
     this.onMouseMove,
+    this.bacgrkoundGridSettings,
   });
 
   @override
@@ -191,15 +195,16 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
         body: Stack(
           alignment: Alignment.center,
           children: [
-            Container(
-              color: const Color.fromARGB(255, 35, 35, 37),
-              child: GridBackground(
-                xDensity: 15.0,
-                yDensity: 15.0,
-                showLines: false,
-                showDots: true,
-                dotColor: Colors.grey.withAlpha(50),
-              ),
+            BackgroundGrid(
+              settings:
+                  widget.bacgrkoundGridSettings ??
+                  BackgroundGridSettings(
+                    xDensity: 15.0,
+                    yDensity: 15.0,
+                    showLines: false,
+                    showDots: true,
+                    dotColor: Colors.grey.withAlpha(50),
+                  ),
             ),
             CustomInteractiveViewer(
               constrained: false,
