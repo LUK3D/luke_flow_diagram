@@ -43,7 +43,7 @@ class NodeWidget<T> extends StatefulWidget {
 }
 
 class _NodeWidgetState<T> extends State<NodeWidget<T>> {
-  late Vector2 position = widget.node.position;
+  late Vector2 position;
 
   Widget makeSockets(NodeSocketType type) {
     return Column(
@@ -114,6 +114,12 @@ class _NodeWidgetState<T> extends State<NodeWidget<T>> {
           })
           .toList(),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    position = widget.node.position;
   }
 
   @override

@@ -59,6 +59,9 @@ class LukeFlowCanvas<T> extends StatefulWidget {
   /// Handles connection error
   final Function(EdgeConnectionsModel connection)? onConnectionError;
 
+  /// Occurs when an edge is droped on the canvas without a target
+  final Function(NodeSocketModel source, Vector2 dropPosition)? onEdgeDrop;
+
   const LukeFlowCanvas({
     super.key,
     required this.nodes,
@@ -75,6 +78,7 @@ class LukeFlowCanvas<T> extends StatefulWidget {
     this.onMouseMove,
     this.bacgrkoundGridSettings,
     this.onConnectionError,
+    this.onEdgeDrop,
   });
 
   @override
@@ -96,6 +100,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
   late List<NodeModel<T>> nodes = widget.nodes;
 
   final viewerController = CustomInteractiveViewerController();
+  Vector2 mousePositionRelativeToCanvas = Vector2.zero;
 
   @override
   void initState() {
@@ -220,7 +225,11 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
       onHover: (event) {
         if (canvasBox != null) {
           final localPosition = canvasBox!.globalToLocal(event.position);
-          widget.onMouseMove?.call(Vector2(localPosition.dx, localPosition.dy));
+          mousePositionRelativeToCanvas = Vector2(
+            localPosition.dx,
+            localPosition.dy,
+          );
+          widget.onMouseMove?.call(mousePositionRelativeToCanvas);
         }
       },
       child: Scaffold(
@@ -312,7 +321,18 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                             }
                             createConnection(hoveringSlot!, node);
                           }
-                          initialSlot = null;
+
+                          if (hoveringSlot == null &&
+                              initialSlot != null &&
+                              ghostSlot != null) {
+                            final position = ghostSlot!.position;
+                            Future.delayed(Duration(milliseconds: 100), () {
+                              widget.onEdgeDrop?.call(initialSlot!, position);
+                              initialSlot = null;
+                            });
+                          } else {
+                            initialSlot = null;
+                          }
 
                           //Remove ghost slot
                           setState(() {
