@@ -48,61 +48,71 @@ class _NodeWidgetState<T> extends State<NodeWidget<T>> {
   Widget makeSockets(NodeSocketType type) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: widget.node.sockets.where((s) => s.type == type).map((socket) {
-        return GestureDetector(
-          onPanStart: (details) {
-            socket.position = Vector2(
-              details.globalPosition.dx,
-              details.globalPosition.dy,
-            );
+      children: widget.node.inputSockets
+          .followedBy(widget.node.outputSockets)
+          .where((s) => s.type == type)
+          .map((socket) {
+            return GestureDetector(
+              onPanStart: (details) {
+                socket.position = Vector2(
+                  details.globalPosition.dx,
+                  details.globalPosition.dy,
+                );
 
-            widget.onSocketPanStart(
-              socket,
-              details.globalPosition,
-              widget.node,
+                widget.onSocketPanStart(
+                  socket,
+                  details.globalPosition,
+                  widget.node,
+                );
+              },
+              onPanEnd: (details) {
+                widget.onSocketPanEnd(
+                  socket,
+                  details.globalPosition,
+                  widget.node,
+                );
+              },
+              onPanUpdate: (details) {
+                widget.onSocketPanUpdate(
+                  socket,
+                  details.globalPosition,
+                  widget.node,
+                );
+              },
+              child: MouseRegion(
+                onEnter: (event) {
+                  widget.onSocketMouseEnter(
+                    socket,
+                    Offset(socket.position.x, socket.position.y),
+                    widget.node,
+                  );
+                },
+                onExit: (event) {
+                  widget.onSocketMouseLeave(
+                    socket,
+                    Offset(socket.position.x, socket.position.y),
+                    widget.node,
+                  );
+                },
+                child:
+                    widget.socketBuilder?.call(widget.node, socket) ??
+                    Container(
+                      key: socket.key,
+                      width: widget.socketWidth,
+                      height: widget.socketHeight,
+                      decoration: BoxDecoration(
+                        color: socket.type == NodeSocketType.output
+                            ? Colors.pink
+                            : Colors.purple,
+                        borderRadius: BorderRadius.circular(
+                          widget.socketRadius,
+                        ),
+                      ),
+                    ),
+              ),
             );
-          },
-          onPanEnd: (details) {
-            widget.onSocketPanEnd(socket, details.globalPosition, widget.node);
-          },
-          onPanUpdate: (details) {
-            widget.onSocketPanUpdate(
-              socket,
-              details.globalPosition,
-              widget.node,
-            );
-          },
-          child: MouseRegion(
-            onEnter: (event) {
-              widget.onSocketMouseEnter(
-                socket,
-                Offset(socket.position.x, socket.position.y),
-                widget.node,
-              );
-            },
-            onExit: (event) {
-              widget.onSocketMouseLeave(
-                socket,
-                Offset(socket.position.x, socket.position.y),
-                widget.node,
-              );
-            },
-            child:
-                widget.socketBuilder?.call(widget.node, socket) ??
-                Container(
-                  key: socket.key,
-                  width: widget.socketWidth,
-                  height: widget.socketHeight,
-                  decoration: BoxDecoration(
-                    color: socket.type == NodeSocketType.output
-                        ? Colors.pink
-                        : Colors.purple,
-                    borderRadius: BorderRadius.circular(widget.socketRadius),
-                  ),
-                ),
-          ),
-        );
-      }).toList(),
+          })
+          .toList(),
     );
   }
 

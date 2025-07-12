@@ -165,7 +165,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
       }
       setState(() {
         connections = connections.map((c) {
-          for (var s in node.sockets) {
+          for (var s in node.inputSockets.followedBy(node.outputSockets)) {
             final value = getWidgetPosition(s.key);
             if ((c.source.id.contains(s.id) && value != null)) {
               c.source.position = value;

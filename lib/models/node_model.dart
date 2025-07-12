@@ -47,46 +47,40 @@ class NodeModel<T> {
   late String id;
   late GlobalKey key;
   final T? data;
-  late List<NodeSocketModel> sockets;
-  final int inputSockets;
-  final int outputSockets;
+  late List<NodeSocketModel> inputSockets;
+  late List<NodeSocketModel> outputSockets;
 
   NodeModel({
     Vector2? position,
     String? id,
     this.data,
-    this.inputSockets = 1,
-    this.outputSockets = 1,
-    List<NodeSocketModel>? sockets,
+    List<NodeSocketModel>? inputSockets,
+    List<NodeSocketModel>? outputSockets,
   }) {
     this.id = id ?? UniqueKey().toString();
     this.key = GlobalKey();
     this.position = position ?? Vector2.zero;
-
-    this.sockets = sockets ?? [];
-
-    for (var i = 0; i < inputSockets; i++) {
-      this.sockets.add(
+    this.inputSockets = inputSockets ?? [];
+    this.outputSockets = outputSockets ?? [];
+    if (this.inputSockets.isEmpty) {
+      this.inputSockets.addAll([
         NodeSocketModel(
           nodeId: this.id,
           id: UniqueKey().toString(),
           type: NodeSocketType.input,
-          position: Vector2(0, 0),
+          position: Vector2.zero,
           data: {},
         ),
-      );
-    }
-
-    for (var i = 0; i < outputSockets; i++) {
-      this.sockets.add(
+      ]);
+      this.outputSockets.addAll([
         NodeSocketModel(
           nodeId: this.id,
           id: UniqueKey().toString(),
           type: NodeSocketType.output,
-          position: Vector2(0, i * 2),
+          position: Vector2.zero,
           data: {},
         ),
-      );
+      ]);
     }
   }
 
@@ -95,10 +89,13 @@ class NodeModel<T> {
       data = null,
       key = GlobalKey(),
       position = Vector2(json['position']['x'], json['position']['y']),
-      inputSockets = json["input_sockets"],
-      outputSockets = json["output_sockets"],
-      sockets = List<NodeSocketModel>.from(
-        (json["sockets"] as List<Map<String, dynamic>>)
+      outputSockets = List<NodeSocketModel>.from(
+        (json["output_sockets"] as List<Map<String, dynamic>>)
+            .map((ns) => NodeSocketModel.fromJson(ns))
+            .toList(),
+      ),
+      inputSockets = List<NodeSocketModel>.from(
+        (json["input_sockets"] as List<Map<String, dynamic>>)
             .map((ns) => NodeSocketModel.fromJson(ns))
             .toList(),
       );
@@ -107,9 +104,8 @@ class NodeModel<T> {
     return {
       'position': {'x': position.x, 'y': position.y},
       'id': id,
-      'input_sockets': inputSockets,
-      'output_sockets': outputSockets,
-      "sockets": sockets.map((s) => s.toJson()).toList(),
+      'input_sockets': inputSockets.map((s) => s.toJson()).toList(),
+      'output_sockets': outputSockets.map((s) => s.toJson()).toList(),
     };
   }
 }
