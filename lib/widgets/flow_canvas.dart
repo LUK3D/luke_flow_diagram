@@ -28,6 +28,8 @@ class LukeFlowCanvas<T> extends StatefulWidget {
   final Widget Function(NodeModel<T> node, NodeSocketModel socket)?
   socketBuilder;
 
+  final Function(Vector2 position)? onMouseMove;
+
   /// Width of the canvas.
   final double width;
 
@@ -63,6 +65,7 @@ class LukeFlowCanvas<T> extends StatefulWidget {
     this.onUpdate,
     this.width = 2024 * 5,
     this.height = 2024 * 5,
+    this.onMouseMove,
   });
 
   @override
@@ -177,129 +180,146 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            color: const Color.fromARGB(255, 35, 35, 37),
-            child: GridBackground(
-              xDensity: 15.0,
-              yDensity: 15.0,
-              showLines: false,
-              showDots: true,
-              dotColor: Colors.grey.withAlpha(50),
+    return MouseRegion(
+      onHover: (event) {
+        if (canvasBox != null) {
+          final localPosition = canvasBox!.globalToLocal(event.position);
+          widget.onMouseMove?.call(Vector2(localPosition.dx, localPosition.dy));
+        }
+      },
+      child: Scaffold(
+        body: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              color: const Color.fromARGB(255, 35, 35, 37),
+              child: GridBackground(
+                xDensity: 15.0,
+                yDensity: 15.0,
+                showLines: false,
+                showDots: true,
+                dotColor: Colors.grey.withAlpha(50),
+              ),
             ),
-          ),
-          CustomInteractiveViewer(
-            constrained: false,
-            controller: viewerController,
-            minScale: 0.5,
-            maxScale: 2.5,
-            initialScale: 1.0,
-            boundaryMargin: const EdgeInsets.all(double.infinity),
-            child: Container(
-              width: widget.width,
-              height: widget.height,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.red,
-                  width: 4,
-                  strokeAlign: BorderSide.strokeAlignCenter,
+            CustomInteractiveViewer(
+              constrained: false,
+              controller: viewerController,
+              minScale: 0.5,
+              maxScale: 2.5,
+              initialScale: 1.0,
+              boundaryMargin: const EdgeInsets.all(double.infinity),
+              child: Container(
+                width: widget.width,
+                height: widget.height,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.red,
+                    width: 4,
+                    strokeAlign: BorderSide.strokeAlignCenter,
+                  ),
+                ),
+                child: Stack(
+                  key: canvasKey,
+                  alignment: Alignment.center,
+                  fit: StackFit.passthrough,
+                  children: [
+                    ...connections.map((c) {
+                      return BezierEdge(
+                        source: Offset(
+                          c.source.position.x,
+                          c.source.position.y,
+                        ),
+                        target: Offset(
+                          c.target.position.x,
+                          c.target.position.y,
+                        ),
+                        isDashed: true,
+                        color: Colors.blue,
+                      );
+                    }),
+                    ...nodes.map((node) {
+                      return NodeWidget(
+                        node: node,
+                        nodeBuilder: widget.nodeBuilder,
+                        socketWidth: widget.socketWidth,
+                        socketHeight: widget.socketHeight,
+                        socketRadius: widget.socketRadius,
+                        socketBuilder: widget.socketBuilder,
+                        onUpdate: (node) {
+                          updateNodesPosition([node]);
+                        },
+                        onSocketPanUpdate: (socket, details, node) {
+                          if (ghostSlot != null) {
+                            setState(() {
+                              if (canvasBox != null) {
+                                final local = canvasBox!.globalToLocal(
+                                  details,
+                                ); // relative to canvas
+
+                                ghostSlot!.position = Vector2(
+                                  local.dx,
+                                  local.dy,
+                                );
+                              }
+                            });
+                          }
+                        },
+                        onSocketPanEnd: (socket, details, node) {
+                          if (hoveringSlot != null &&
+                              initialSlot != null &&
+                              hoveringSlot?.id != initialSlot?.id) {
+                            final pos = getWidgetPosition(hoveringSlot!.key);
+                            if (pos != null) {
+                              hoveringSlot!.position = pos;
+                            }
+                            createConnection(hoveringSlot!, node);
+                          }
+                          initialSlot = null;
+
+                          //Remove ghost slot
+                          setState(() {
+                            connections.removeWhere((e) {
+                              return e.target.id == ghostSlot?.id;
+                            });
+                          });
+                          ghostSlot = null;
+                        },
+                        onSocketPanStart: (socket, details, node) {
+                          initialSlot = socket;
+
+                          ghostSlot = NodeSocketModel(
+                            nodeId: node.id,
+                            type: NodeSocketType.inputOutput,
+                            position: Vector2(details.dx, details.dy),
+                          );
+
+                          if (canvasBox != null) {
+                            final local = canvasBox!.globalToLocal(
+                              details,
+                            ); // relative to canvas
+
+                            initialSlot!.position = Vector2(
+                              local.dx,
+                              local.dy + widget.socketHeight / 2,
+                            );
+                            ghostSlot!.position = initialSlot!.position;
+                          }
+                          createConnection(ghostSlot!, node);
+                        },
+                        onSocketMouseEnter: (socket, details, node) {
+                          hoveringSlot = socket;
+                        },
+                        onSocketMouseLeave: (socket, details, node) {
+                          hoveringSlot = null;
+                        },
+                      );
+                    }),
+                  ],
                 ),
               ),
-              child: Stack(
-                key: canvasKey,
-                alignment: Alignment.center,
-                fit: StackFit.passthrough,
-                children: [
-                  ...connections.map((c) {
-                    return BezierEdge(
-                      source: Offset(c.source.position.x, c.source.position.y),
-                      target: Offset(c.target.position.x, c.target.position.y),
-                      isDashed: true,
-                      color: Colors.blue,
-                    );
-                  }),
-                  ...nodes.map((node) {
-                    return NodeWidget(
-                      node: node,
-                      nodeBuilder: widget.nodeBuilder,
-                      socketWidth: widget.socketWidth,
-                      socketHeight: widget.socketHeight,
-                      socketRadius: widget.socketRadius,
-                      socketBuilder: widget.socketBuilder,
-                      onUpdate: (node) {
-                        updateNodesPosition([node]);
-                      },
-                      onSocketPanUpdate: (socket, details, node) {
-                        if (ghostSlot != null) {
-                          setState(() {
-                            if (canvasBox != null) {
-                              final local = canvasBox!.globalToLocal(
-                                details,
-                              ); // relative to canvas
-
-                              ghostSlot!.position = Vector2(local.dx, local.dy);
-                            }
-                          });
-                        }
-                      },
-                      onSocketPanEnd: (socket, details, node) {
-                        if (hoveringSlot != null &&
-                            initialSlot != null &&
-                            hoveringSlot?.id != initialSlot?.id) {
-                          final pos = getWidgetPosition(hoveringSlot!.key);
-                          if (pos != null) {
-                            hoveringSlot!.position = pos;
-                          }
-                          createConnection(hoveringSlot!, node);
-                        }
-                        initialSlot = null;
-
-                        //Remove ghost slot
-                        setState(() {
-                          connections.removeWhere((e) {
-                            return e.target.id == ghostSlot?.id;
-                          });
-                        });
-                        ghostSlot = null;
-                      },
-                      onSocketPanStart: (socket, details, node) {
-                        initialSlot = socket;
-
-                        ghostSlot = NodeSocketModel(
-                          nodeId: node.id,
-                          type: NodeSocketType.inputOutput,
-                          position: Vector2(details.dx, details.dy),
-                        );
-
-                        if (canvasBox != null) {
-                          final local = canvasBox!.globalToLocal(
-                            details,
-                          ); // relative to canvas
-
-                          initialSlot!.position = Vector2(
-                            local.dx,
-                            local.dy + widget.socketHeight / 2,
-                          );
-                          ghostSlot!.position = initialSlot!.position;
-                        }
-                        createConnection(ghostSlot!, node);
-                      },
-                      onSocketMouseEnter: (socket, details, node) {
-                        hoveringSlot = socket;
-                      },
-                      onSocketMouseLeave: (socket, details, node) {
-                        hoveringSlot = null;
-                      },
-                    );
-                  }),
-                ],
-              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
