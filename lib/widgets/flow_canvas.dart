@@ -192,6 +192,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
         }
       },
       child: Scaffold(
+        backgroundColor: Colors.transparent,
         body: Stack(
           alignment: Alignment.center,
           children: [

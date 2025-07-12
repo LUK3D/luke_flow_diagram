@@ -21,7 +21,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: Scaffold(body: const LukeFlowDiagram()),
+      home: Scaffold(
+        backgroundColor: const Color.fromARGB(255, 46, 46, 53),
+        body: const LukeFlowDiagram(),
+      ),
     );
   }
 }
