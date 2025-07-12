@@ -251,8 +251,8 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
             CustomInteractiveViewer(
               constrained: false,
               controller: viewerController,
-              minScale: 0.5,
-              maxScale: 2.5,
+              minScale: 0.2,
+              maxScale: 4,
               initialScale: 1.0,
               boundaryMargin: const EdgeInsets.all(double.infinity),
               child: Container(
