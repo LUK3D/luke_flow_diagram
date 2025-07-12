@@ -40,18 +40,29 @@ class LukeFlowDiagram extends StatefulWidget {
 
 class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
   List<EdgeConnectionsModel> connections = [];
-  late final nodes = List.generate(5, (index) => index)
-      .map(
-        (i) => NodeModel(
-          data: DataModelExample(
-            id: '$i',
-            name: 'Node $i',
-            description: 'This is the first node',
-          ),
-          position: getRandomPositionNearCenter(spread: 1000),
+  late final nodes = List.generate(5, (index) => index).map((i) {
+    final nodeId = UniqueKey().toString();
+
+    return NodeModel(
+      id: nodeId,
+      inputSockets: [
+        NodeSocketModel(
+          maxConnections: 1,
+          nodeId: nodeId,
+          id: UniqueKey().toString(),
+          type: NodeSocketType.input,
+          position: Vector2.zero,
+          data: {},
         ),
-      )
-      .toList();
+      ],
+      data: DataModelExample(
+        id: '$i',
+        name: 'Node $i',
+        description: 'This is the first node',
+      ),
+      position: getRandomPositionNearCenter(spread: 1000),
+    );
+  }).toList();
 
   final controller = LukeFlowCanvasController<DataModelExample>();
 
@@ -74,9 +85,39 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                 ),
                 TextButton(
                   onPressed: () {
+                    final nodeId = UniqueKey().toString();
                     controller.addNode(
                       NodeModel(
+                        id: nodeId,
                         position: getRandomPositionNearCenter(spread: 1000),
+                        inputSockets: [
+                          NodeSocketModel(
+                            maxConnections: 1,
+                            nodeId: nodeId,
+                            id: UniqueKey().toString(),
+                            type: NodeSocketType.input,
+                            position: Vector2.zero,
+                            data: {},
+                          ),
+                          NodeSocketModel(
+                            maxConnections: 1,
+                            nodeId: nodeId,
+                            id: UniqueKey().toString(),
+                            type: NodeSocketType.input,
+                            position: Vector2.zero,
+                            data: {},
+                          ),
+                        ],
+                        outputSockets: [
+                          NodeSocketModel(
+                            maxConnections: 2,
+                            nodeId: nodeId,
+                            id: UniqueKey().toString(),
+                            type: NodeSocketType.output,
+                            position: Vector2.zero,
+                            data: {},
+                          ),
+                        ],
                       ),
                     );
                   },
@@ -103,6 +144,11 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
               controller: controller,
               nodes: nodes,
               initialConnections: connections,
+              onConnectionError: (connection) {
+                debugPrint(
+                  "ERROR CONNECTING ${connection.source.id} to ${connection.target.id}",
+                );
+              },
               nodeBuilder: (node) {
                 return Container(
                   padding: const EdgeInsets.all(16),

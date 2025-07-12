@@ -53,7 +53,11 @@ class LukeFlowCanvas<T> extends StatefulWidget {
   /// The radius of each socket (used for detecting interactions).
   final double socketRadius;
 
+  /// Settings for the backgrouind grid
   final BackgroundGridSettings? bacgrkoundGridSettings;
+
+  /// Handles connection error
+  final Function(EdgeConnectionsModel connection)? onConnectionError;
 
   const LukeFlowCanvas({
     super.key,
@@ -70,6 +74,7 @@ class LukeFlowCanvas<T> extends StatefulWidget {
     this.height = 2024 * 5,
     this.onMouseMove,
     this.bacgrkoundGridSettings,
+    this.onConnectionError,
   });
 
   @override
@@ -127,16 +132,42 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
   }
 
   createConnection(NodeSocketModel socket, NodeModel<T> node) {
+    final previousConnectionsInput = connections
+        .where(
+          (c) =>
+              (c.source.id == socket.id || c.target.id == socket.id) &&
+              c.data != "luke-ghost-socket",
+        )
+        .toList();
+    final previousConnectionsOutput = connections
+        .where(
+          (c) =>
+              (c.source.id == initialSlot!.id ||
+                  c.target.id == initialSlot!.id) &&
+              c.data != "luke-ghost-socket",
+        )
+        .toList();
+
     final connection = EdgeConnectionsModel(
       source: initialSlot!,
       target: socket,
     );
+
+    if ((previousConnectionsInput.length) >= socket.maxConnections) {
+      widget.onConnectionError?.call(connection);
+      return;
+    }
+
+    /// Remove 1 because when dragi
+    if ((previousConnectionsOutput.length - 1) >= initialSlot!.maxConnections) {
+      widget.onConnectionError?.call(connection);
+      return;
+    }
+
     setState(() {
       connections.add(connection);
     });
-    // Future.delayed(Duration(seconds: 1), () {
     updateNodesPosition([node]);
-    // });
   }
 
   setCustomState(Function actin) {
@@ -297,6 +328,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                             nodeId: node.id,
                             type: NodeSocketType.inputOutput,
                             position: Vector2(details.dx, details.dy),
+                            data: "luke-ghost-socket",
                           );
 
                           if (canvasBox != null) {

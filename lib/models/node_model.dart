@@ -10,6 +10,7 @@ class NodeSocketModel {
   Vector2 position;
   dynamic data;
   late GlobalKey key;
+  final int maxConnections;
 
   NodeSocketModel({
     String? id,
@@ -17,6 +18,7 @@ class NodeSocketModel {
     required this.type,
     required this.position,
     this.data,
+    this.maxConnections = 500,
   }) {
     this.id = id ?? UniqueKey().toString();
     key = GlobalKey();
@@ -26,6 +28,7 @@ class NodeSocketModel {
     : id = json['id'],
       key = GlobalKey(),
       nodeId = json["node_id"],
+      maxConnections = json["max_connections"],
       type = NodeSocketType.values.firstWhere(
         (e) => e.name == json['type'],
         orElse: () => NodeSocketType.inputOutput,
@@ -38,6 +41,7 @@ class NodeSocketModel {
       'node_id': nodeId,
       'type': type.name,
       'position': {'x': position.x, 'y': position.y},
+      'max_connections': maxConnections,
     };
   }
 }
@@ -62,7 +66,7 @@ class NodeModel<T> {
     this.position = position ?? Vector2.zero;
     this.inputSockets = inputSockets ?? [];
     this.outputSockets = outputSockets ?? [];
-    if (this.inputSockets.isEmpty) {
+    if (this.inputSockets.isEmpty && this.outputSockets.isEmpty) {
       this.inputSockets.addAll([
         NodeSocketModel(
           nodeId: this.id,
