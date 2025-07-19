@@ -240,7 +240,9 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
 
   deleteNodeById(String id) {
     setState(() {
-      debugPrint("Deleting: $id");
+      connections.removeWhere(
+        (c) => c.source.nodeId == id || c.target.nodeId == id,
+      );
       nodes.removeWhere((n) => n.id == id);
     });
     widget.onUpdate?.call(nodes, connections);
