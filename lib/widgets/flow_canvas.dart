@@ -1,5 +1,3 @@
-import 'dart:nativewrappers/_internal/vm/lib/ffi_allocation_patch.dart';
-
 import 'package:flutter/material.dart';
 import 'package:luke_flow_diagram/models/edge_connections_model.dart';
 import 'package:luke_flow_diagram/models/grid_background_settings.dart';
@@ -234,7 +232,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
       clicking = false;
     }
 
-    Future.delayed(Duration(milliseconds: 300), () {
+    Future.delayed(Duration(milliseconds: 250), () {
       clicking = false;
     });
     clicking = true;
@@ -312,6 +310,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                   }),
                   ...nodes.map((node) {
                     return NodeWidget(
+                      key: ValueKey(node.id),
                       node: node,
                       nodeBuilder: widget.nodeBuilder,
                       socketWidth: widget.socketWidth,

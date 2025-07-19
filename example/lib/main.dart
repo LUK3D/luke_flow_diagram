@@ -53,7 +53,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
             NodeSocketModel(
               connectionLimit: 1,
               nodeId: nodeId,
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              id: UniqueKey().toString(),
               type: NodeSocketType.input,
               position: Vector2.zero,
               data: {},
@@ -63,7 +63,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
             NodeSocketModel(
               connectionLimit: 2,
               nodeId: nodeId,
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              id: UniqueKey().toString(),
               type: NodeSocketType.output,
               position: Vector2.zero,
               data: {},
@@ -102,18 +102,15 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                 ),
                 TextButton(
                   onPressed: () {
-                    final nodeId = DateTime.now().millisecondsSinceEpoch
-                        .toString();
+                    final nodeId = UniqueKey().toString();
                     controller.addNode(
                       NodeModel(
-                        id: nodeId,
                         position: getRandomPositionNearCenter(spread: 1000),
                         inputSockets: [
                           NodeSocketModel(
                             connectionLimit: 1,
                             nodeId: nodeId,
-                            id: DateTime.now().millisecondsSinceEpoch
-                                .toString(),
+                            id: UniqueKey().toString(),
                             type: NodeSocketType.input,
                             position: Vector2.zero,
                             data: {},
@@ -123,8 +120,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                           NodeSocketModel(
                             connectionLimit: 2,
                             nodeId: nodeId,
-                            id: DateTime.now().millisecondsSinceEpoch
-                                .toString(),
+                            id: UniqueKey().toString(),
                             type: NodeSocketType.output,
                             position: Vector2.zero,
                             data: {},
@@ -185,7 +181,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                 debugPrint(nodes.length.toString());
 
                 /// You can create a new node when you drop the connection edge on the canvas by using the onEdgeDrop .
-                final nodeId = DateTime.now().millisecondsSinceEpoch.toString();
+                final nodeId = UniqueKey().toString();
 
                 /// Create new sockets for the new node
                 final inputSocket = NodeSocketModel(
