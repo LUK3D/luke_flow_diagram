@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 class CustomInteractiveViewerController {
   _CustomInteractiveViewerState? _state;
+
   void resetView() => _state?._resetTransform();
   void center() => _state?._center();
   void jumpTo(Offset offset) => _state?._jumpTo(offset);
@@ -25,6 +26,17 @@ class CustomInteractiveViewer extends StatefulWidget {
   final bool constrained;
   final CustomInteractiveViewerController? controller;
 
+  final Function(PointerDownEvent)? onPointerDown;
+  final Function(PointerMoveEvent)? onPointerMove;
+  final Function(PointerUpEvent)? onPointerUp;
+  final Function(PointerHoverEvent)? onPointerHover;
+  final Function(PointerCancelEvent)? onPointerCancel;
+  final Function(PointerPanZoomStartEvent)? onPointerPanZoomStart;
+  final Function(PointerPanZoomUpdateEvent)? onPointerPanZoomUpdate;
+  final Function(PointerPanZoomEndEvent)? onPointerPanZoomEnd;
+  final Function(PointerSignalEvent)? onPointerSignal;
+  final HitTestBehavior behavior;
+
   const CustomInteractiveViewer({
     super.key,
     required this.child,
@@ -34,6 +46,16 @@ class CustomInteractiveViewer extends StatefulWidget {
     this.boundaryMargin = EdgeInsets.zero,
     this.constrained = true,
     this.controller,
+    this.onPointerDown,
+    this.onPointerMove,
+    this.onPointerUp,
+    this.onPointerHover,
+    this.onPointerCancel,
+    this.onPointerPanZoomStart,
+    this.onPointerPanZoomUpdate,
+    this.onPointerPanZoomEnd,
+    this.onPointerSignal,
+    this.behavior = HitTestBehavior.deferToChild,
   });
 
   @override
@@ -106,21 +128,6 @@ class _CustomInteractiveViewerState extends State<CustomInteractiveViewer> {
     });
   }
 
-  void _onDoubleTapDown(TapDownDetails details) {
-    final position = details.localPosition;
-    const zoomFactor = 1.25;
-    final newScale = (scale * zoomFactor).clamp(
-      widget.minScale,
-      widget.maxScale,
-    );
-    final newOffset = (offset - position) * (newScale / scale) + position;
-
-    setState(() {
-      scale = newScale;
-      offset = _clampOffset(newOffset);
-    });
-  }
-
   void _onPointerSignal(PointerSignalEvent event) {
     if (event is PointerScrollEvent) {
       const zoomSpeed = 0.0015;
@@ -172,21 +179,47 @@ class _CustomInteractiveViewerState extends State<CustomInteractiveViewer> {
     return Offset(dx, dy);
   }
 
+  void _maybeCenter() {
+    if (_hasCenteredInitially || _childSize == null || _viewportSize == null) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_hasCenteredInitially) {
+        setState(() {
+          offset = _calculateCenteredOffset();
+          _hasCenteredInitially = true;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (_, constraints) {
         _viewportSize = Size(constraints.maxWidth, constraints.maxHeight);
+        _maybeCenter();
 
-        Widget child = Transform(
-          transform: Matrix4.identity()
-            ..translate(offset.dx, offset.dy)
-            ..scale(scale),
-          alignment: Alignment.topLeft,
-          child: _SizeReportingWidget(
-            key: _childKey,
-            onSizeChanged: (size) => setState(() => _childSize = size),
-            child: widget.child,
+        Widget child = _SizeReportingWidget(
+          key: _childKey,
+          onSizeChanged: (size) {
+            if (_childSize != size) {
+              setState(() {
+                _childSize = size;
+              });
+            }
+          },
+          child: widget.child,
+        );
+
+        child = RepaintBoundary(
+          child: Transform(
+            transform: Matrix4.identity()
+              ..translate(offset.dx, offset.dy)
+              ..scale(scale),
+            alignment: Alignment.topLeft,
+            child: child,
           ),
         );
 
@@ -204,21 +237,24 @@ class _CustomInteractiveViewerState extends State<CustomInteractiveViewer> {
           );
         }
 
-        // After child size is known and viewport size known, center once:
-        if (!_hasCenteredInitially &&
-            _childSize != null &&
-            _viewportSize != null) {
-          offset = _calculateCenteredOffset();
-          _hasCenteredInitially = true;
-        }
-
         return Listener(
-          onPointerSignal: _onPointerSignal,
+          onPointerSignal: (event) {
+            _onPointerSignal(event);
+            widget.onPointerSignal?.call(event);
+          },
+          onPointerCancel: widget.onPointerCancel,
+          onPointerDown: widget.onPointerDown,
+          onPointerHover: widget.onPointerHover,
+          onPointerMove: widget.onPointerMove,
+          onPointerPanZoomEnd: widget.onPointerPanZoomEnd,
+          onPointerPanZoomStart: widget.onPointerPanZoomStart,
+          onPointerPanZoomUpdate: widget.onPointerPanZoomUpdate,
+          onPointerUp: widget.onPointerUp,
+          behavior: widget.behavior,
           child: GestureDetector(
             onScaleStart: _onScaleStart,
             onScaleUpdate: _onScaleUpdate,
-            onDoubleTapDown: _onDoubleTapDown,
-            behavior: HitTestBehavior.translucent,
+            behavior: HitTestBehavior.deferToChild,
             child: child,
           ),
         );
@@ -242,14 +278,18 @@ class _SizeReportingWidget extends StatefulWidget {
 }
 
 class _SizeReportingWidgetState extends State<_SizeReportingWidget> {
+  Size? _oldSize;
+
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final contextSize = context.size;
-      if (contextSize != null) {
-        widget.onSizeChanged(contextSize);
+      final newSize = context.size;
+      if (newSize != null && newSize != _oldSize) {
+        _oldSize = newSize;
+        widget.onSizeChanged(newSize);
       }
     });
+
     return widget.child;
   }
 }

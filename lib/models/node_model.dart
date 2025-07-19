@@ -20,7 +20,7 @@ class NodeSocketModel {
     this.data,
     this.connectionLimit = 500,
   }) {
-    this.id = id ?? UniqueKey().toString();
+    this.id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
     key = GlobalKey();
   }
 
@@ -61,7 +61,7 @@ class NodeModel<T> {
     List<NodeSocketModel>? inputSockets,
     List<NodeSocketModel>? outputSockets,
   }) {
-    this.id = id ?? UniqueKey().toString();
+    this.id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
     this.key = GlobalKey();
     this.position = position ?? Vector2.zero;
     this.inputSockets = inputSockets ?? [];
@@ -70,7 +70,7 @@ class NodeModel<T> {
       this.inputSockets.addAll([
         NodeSocketModel(
           nodeId: this.id,
-          id: UniqueKey().toString(),
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
           type: NodeSocketType.input,
           position: Vector2.zero,
           data: {},
@@ -79,7 +79,7 @@ class NodeModel<T> {
       this.outputSockets.addAll([
         NodeSocketModel(
           nodeId: this.id,
-          id: UniqueKey().toString(),
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
           type: NodeSocketType.output,
           position: Vector2.zero,
           data: {},

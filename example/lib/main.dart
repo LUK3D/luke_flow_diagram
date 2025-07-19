@@ -40,41 +40,48 @@ class LukeFlowDiagram extends StatefulWidget {
 
 class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
   List<EdgeConnectionsModel> connections = [];
-  late final nodes = List.generate(5, (index) => index).map((i) {
-    final nodeId = UniqueKey().toString();
+  List<NodeModel<DataModelExample>> nodes = List.generate(5, (index) => index)
+      .map((i) {
+        final nodeId = DateTime.now()
+            .add(Duration(seconds: i))
+            .microsecondsSinceEpoch
+            .toString();
 
-    return NodeModel(
-      id: nodeId,
-      inputSockets: [
-        NodeSocketModel(
-          connectionLimit: 1,
-          nodeId: nodeId,
-          id: UniqueKey().toString(),
-          type: NodeSocketType.input,
-          position: Vector2.zero,
-          data: {},
-        ),
-      ],
-      outputSockets: [
-        NodeSocketModel(
-          connectionLimit: 2,
-          nodeId: nodeId,
-          id: UniqueKey().toString(),
-          type: NodeSocketType.output,
-          position: Vector2.zero,
-          data: {},
-        ),
-      ],
-      data: DataModelExample(
-        id: '$i',
-        name: 'Node $i',
-        description: 'This is the first node',
-      ),
-      position: getRandomPositionNearCenter(spread: 1000),
-    );
-  }).toList();
+        return NodeModel(
+          id: nodeId,
+          inputSockets: [
+            NodeSocketModel(
+              connectionLimit: 1,
+              nodeId: nodeId,
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              type: NodeSocketType.input,
+              position: Vector2.zero,
+              data: {},
+            ),
+          ],
+          outputSockets: [
+            NodeSocketModel(
+              connectionLimit: 2,
+              nodeId: nodeId,
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              type: NodeSocketType.output,
+              position: Vector2.zero,
+              data: {},
+            ),
+          ],
+          data: DataModelExample(
+            id: '$i',
+            name: 'Node $i',
+            description: 'This is the first node',
+          ),
+          position: getRandomPositionNearCenter(spread: 1000),
+        );
+      })
+      .toList();
 
   final controller = LukeFlowCanvasController<DataModelExample>();
+
+  List<String> selectedNodes = [];
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +102,8 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                 ),
                 TextButton(
                   onPressed: () {
-                    final nodeId = UniqueKey().toString();
+                    final nodeId = DateTime.now().millisecondsSinceEpoch
+                        .toString();
                     controller.addNode(
                       NodeModel(
                         id: nodeId,
@@ -104,7 +112,8 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                           NodeSocketModel(
                             connectionLimit: 1,
                             nodeId: nodeId,
-                            id: UniqueKey().toString(),
+                            id: DateTime.now().millisecondsSinceEpoch
+                                .toString(),
                             type: NodeSocketType.input,
                             position: Vector2.zero,
                             data: {},
@@ -114,7 +123,8 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                           NodeSocketModel(
                             connectionLimit: 2,
                             nodeId: nodeId,
-                            id: UniqueKey().toString(),
+                            id: DateTime.now().millisecondsSinceEpoch
+                                .toString(),
                             type: NodeSocketType.output,
                             position: Vector2.zero,
                             data: {},
@@ -143,6 +153,12 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                   },
                   child: Text("Inport"),
                 ),
+                TextButton(
+                  onPressed: () {
+                    controller.clear();
+                  },
+                  child: Text("Clear"),
+                ),
               ],
             ),
           ),
@@ -153,7 +169,23 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
               initialConnections: connections,
               onEdgeDrop: (source, dropPosition) {
                 /// You can create a new node when you drop the connection edge on the canvas by using the onEdgeDrop .
-                final nodeId = UniqueKey().toString();
+              },
+              onConnectionError: (connection) {
+                /// This function can be used to handle connection limit error
+                debugPrint(
+                  "ERROR CONNECTING ${connection.source.id} to ${connection.target.id}",
+                );
+              },
+              onNodesDeleted: (deletedNode) {
+                debugPrint(
+                  "Deleted Node: ${(deletedNode.first.data as DataModelExample).name}",
+                );
+              },
+              onDoubleTap: (mousePosition) {
+                debugPrint(nodes.length.toString());
+
+                /// You can create a new node when you drop the connection edge on the canvas by using the onEdgeDrop .
+                final nodeId = DateTime.now().millisecondsSinceEpoch.toString();
 
                 /// Create new sockets for the new node
                 final inputSocket = NodeSocketModel(
@@ -170,7 +202,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                 controller.addNodes([
                   NodeModel(
                     id: nodeId,
-                    position: dropPosition,
+                    position: mousePosition,
                     inputSockets: [inputSocket],
                     outputSockets: [outputSocket],
                     data: DataModelExample(
@@ -180,45 +212,44 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                     ),
                   ),
                 ]);
-
-                /// Wait for the node to be added before creating the connection
-                Future.delayed(Duration(milliseconds: 100), () {
-                  controller.addConnection(
-                    EdgeConnectionsModel(
-                      source: source,
-                      target: source.type == NodeSocketType.input
-                          ? outputSocket
-                          : inputSocket,
-                    ),
-                  );
-
-                  /// Trigger a manual update to force the edges to update
-                  controller.updateNodesPosition(nodes);
-                });
-              },
-              onConnectionError: (connection) {
-                /// This function can be used to handle connection limit error
-                debugPrint(
-                  "ERROR CONNECTING ${connection.source.id} to ${connection.target.id}",
-                );
+                controller.updateNodesPosition(nodes);
               },
               nodeBuilder: (node) {
-                return Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: node.data?.color ?? Colors.white,
+                return Material(
+                  color: selectedNodes.contains(node.id)
+                      ? Colors.amber
+                      : (node.data?.color ?? Colors.white),
+                  borderRadius: BorderRadius.circular(8),
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Text(
-                      node.data?.name ?? 'Node',
-                      style: TextStyle(color: Colors.black),
+                    onTap: () {
+                      debugPrint("SelectedNode: ${node.id}");
+                      setState(() {
+                        selectedNodes.clear();
+                        selectedNodes.add(node.id);
+                      });
+                    },
+                    onSecondaryTap: () {
+                      controller.removeNodeById(selectedNodes.first);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+
+                      child: Center(
+                        child: Text(
+                          node.data?.name ?? 'Node',
+                          style: TextStyle(color: Colors.black),
+                        ),
+                      ),
                     ),
                   ),
                 );
               },
               onUpdate: (n, c) {
-                connections = c;
+                setState(() {
+                  connections = c;
+                  nodes = n;
+                });
               },
             ),
           ),
