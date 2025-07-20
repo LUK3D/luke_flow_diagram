@@ -119,12 +119,14 @@ class LukeFlowCanvasController<T> {
   /// Loads canvas data from a decoded JSON map.
   void loadFromJson(Map<String, dynamic> data) {
     _notifier.value = FlowCanvasModel<T>.fromMap(data);
+    frame();
   }
 
   /// # loadFromJsonString
   /// Loads canvas data from a JSON string.
   void loadFromJsonString(String data) {
     _notifier.value = FlowCanvasModel<T>.fromJsonString(data);
+    frame();
   }
 
   /// # toJson
@@ -191,6 +193,27 @@ class LukeFlowCanvasController<T> {
       targetZoom: clampedScale,
       duration: animationDuration ?? const Duration(milliseconds: 400),
       curve: curve,
+    );
+  }
+
+  /// # updateConnection
+  updateConnection(EdgeConnectionsModel edgeConnection) {
+    _notifier.value = data.copyWith(
+      connections: List<EdgeConnectionsModel>.from(
+        data.connections
+            .map((c) => c.id == edgeConnection.id ? edgeConnection : c)
+            .toList(),
+      ),
+    );
+    update();
+  }
+
+  /// # updateNode
+  updateNode(NodeModel node) {
+    _notifier.value = data.copyWith(
+      nodes: List<NodeModel<T>>.from(
+        data.nodes.map((n) => n.id == node.id ? node : n).toList(),
+      ),
     );
   }
 }

@@ -86,6 +86,20 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
     controller.addNodes(nodes);
   }
 
+  animate() {
+    if (selectedNodes.isEmpty) {
+      return;
+    }
+    final connection = controller.connections
+        .where((c) => c.source.nodeId == selectedNodes.first)
+        .firstOrNull;
+    if (connection == null) return;
+
+    controller.updateConnection(
+      connection.copyWith(isAnimated: true, animationSpeed: 5),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -176,6 +190,12 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                     controller.frame();
                   },
                   child: Text("Frame"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    animate();
+                  },
+                  child: Text("Animate"),
                 ),
               ],
             ),

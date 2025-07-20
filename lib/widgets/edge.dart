@@ -1,114 +1,93 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:luke_flow_diagram/models/node_model.dart';
+import 'package:luke_flow_diagram/widgets/edges/bezier.dart';
 
-class BezierEdge extends StatelessWidget {
-  final Offset source;
-  final Offset target;
-  final bool isDashed;
-  final Color color;
-  final double strokeWidth;
+class BezierEdge extends StatefulWidget {
+  final NodeSocketModel source;
+  final NodeSocketModel target;
+  final bool isAnimated;
+  final double dashAnimationSpeed;
+
+  final LukeEdgePainter Function(
+    Offset source,
+    Offset target,
+    bool isAnimated,
+    double dashAnimationSpeed,
+  )
+  painterBuilder;
 
   const BezierEdge({
     super.key,
     required this.source,
     required this.target,
-    this.isDashed = false,
-    this.color = Colors.black,
-    this.strokeWidth = 2.0,
+    required this.painterBuilder,
+    this.isAnimated = false,
+    this.dashAnimationSpeed = 1,
   });
+
+  @override
+  State<BezierEdge> createState() => _BezierEdgeState();
+}
+
+class _BezierEdgeState extends State<BezierEdge> with TickerProviderStateMixin {
+  late final Ticker _ticker;
+  double _dashOffset = 0.0;
+
+  late final double dashSpeed = widget.dashAnimationSpeed;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = createTicker(_onTick)..start();
+  }
+
+  void _onTick(Duration elapsed) {
+    setState(() {
+      _dashOffset += dashSpeed;
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     // Calculate bounding box to avoid drawing outside visible area
-    final dx = (target.dx - source.dx).abs();
-    final dy = (target.dy - source.dy).abs();
-    final minX = source.dx < target.dx ? source.dx : target.dx;
-    final minY = source.dy < target.dy ? source.dy : target.dy;
+    final dx =
+        (widget.target.position.toOffset().dx -
+                widget.source.position.toOffset().dx)
+            .abs();
+    final dy =
+        (widget.target.position.toOffset().dy -
+                widget.source.position.toOffset().dy)
+            .abs();
+    final minX =
+        widget.source.position.toOffset().dx <
+            widget.target.position.toOffset().dx
+        ? widget.source.position.toOffset().dx
+        : widget.target.position.toOffset().dx;
+    final minY =
+        widget.source.position.toOffset().dy <
+            widget.target.position.toOffset().dy
+        ? widget.source.position.toOffset().dy
+        : widget.target.position.toOffset().dy;
 
     return Positioned(
       left: minX,
       top: minY,
       child: CustomPaint(
         size: Size(dx, dy),
-        painter: BezierEdgePainter(
-          source: source - Offset(minX, minY),
-          target: target - Offset(minX, minY),
-          isDashed: isDashed,
-          color: color,
-          strokeWidth: strokeWidth,
+        painter: widget.painterBuilder(
+          widget.source.position.toOffset() - Offset(minX, minY),
+          widget.target.position.toOffset() - Offset(minX, minY),
+          widget.isAnimated,
+          _dashOffset,
         ),
       ),
     );
-  }
-}
-
-class BezierEdgePainter extends CustomPainter {
-  final Offset source;
-  final Offset target;
-  final bool isDashed;
-  final Color color;
-  final double strokeWidth;
-
-  BezierEdgePainter({
-    required this.source,
-    required this.target,
-    required this.isDashed,
-    required this.color,
-    required this.strokeWidth,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    final path = Path();
-
-    final dx = (target.dx - source.dx) * 0.5;
-
-    // Create a cubic Bézier curve
-    path.moveTo(source.dx, source.dy);
-    path.cubicTo(
-      source.dx + dx,
-      source.dy,
-      target.dx - dx,
-      target.dy,
-      target.dx,
-      target.dy,
-    );
-
-    if (isDashed) {
-      _drawDashedPath(canvas, path, paint);
-    } else {
-      canvas.drawPath(path, paint);
-    }
-  }
-
-  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
-    const dashWidth = 6.0;
-    const dashSpace = 4.0;
-
-    final PathMetrics pathMetrics = path.computeMetrics();
-    for (final PathMetric metric in pathMetrics) {
-      double distance = 0.0;
-      while (distance < metric.length) {
-        final nextDash = dashWidth + dashSpace;
-        final extracted = metric.extractPath(distance, distance + dashWidth);
-        canvas.drawPath(extracted, paint);
-        distance += nextDash;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant BezierEdgePainter oldDelegate) {
-    return source != oldDelegate.source ||
-        target != oldDelegate.target ||
-        isDashed != oldDelegate.isDashed ||
-        color != oldDelegate.color ||
-        strokeWidth != oldDelegate.strokeWidth;
   }
 }

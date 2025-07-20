@@ -4,6 +4,8 @@ import 'package:luke_flow_diagram/models/grid_background_settings.dart';
 import 'package:luke_flow_diagram/models/node_model.dart';
 import 'package:luke_flow_diagram/utils/math.dart';
 import 'package:luke_flow_diagram/widgets/edge.dart';
+import 'package:luke_flow_diagram/widgets/edges/bezier.dart';
+import 'package:luke_flow_diagram/widgets/edges/step.dart';
 import 'custom_interactive_viewer.dart';
 import 'flow_controller.dart';
 import 'grid_painter.dart';
@@ -68,6 +70,13 @@ class LukeFlowCanvas<T> extends StatefulWidget {
   /// Triggered when user double taps the canvas
   final Function(Vector2 mousePosition)? onDoubleTap;
 
+  final LukeEdgePainter Function(
+    Offset source,
+    Offset target,
+    EdgeConnectionsModel edgeConnection,
+  )?
+  edgeBuilder;
+
   const LukeFlowCanvas({
     super.key,
     required this.nodes,
@@ -79,14 +88,15 @@ class LukeFlowCanvas<T> extends StatefulWidget {
     this.socketRadius = 100,
     this.initialConnections = const [],
     this.onUpdate,
-    this.width = 2024 * 5,
-    this.height = 2024 * 5,
+    this.width = 2024 * 8,
+    this.height = 2024 * 8,
     this.onMouseMove,
     this.bacgrkoundGridSettings,
     this.onConnectionError,
     this.onEdgeDrop,
     this.onNodesDeleted,
     this.onDoubleTap,
+    this.edgeBuilder,
   });
 
   @override
@@ -300,30 +310,46 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                     children: [
                       if (ghostConnection != null && ghostSlot != null)
                         BezierEdge(
-                          source: Offset(
-                            ghostConnection!.source.position.x,
-                            ghostConnection!.source.position.y,
-                          ),
-                          target: Offset(
-                            ghostConnection!.target.position.x,
-                            ghostConnection!.target.position.y,
-                          ),
-                          isDashed: true,
-                          color: Colors.blue,
+                          source: ghostConnection!.source,
+                          target: ghostConnection!.target,
+                          painterBuilder: (source, target, _, _) {
+                            return ghostConnection!.painter ??
+                                LukeEdgePainter(
+                                  source: source,
+                                  target: target,
+                                  isDashed: true,
+                                  color: Colors.blue,
+                                  strokeWidth: 4,
+                                );
+                          },
                         ),
 
                       ..._renderedConnections.map((c) {
                         return BezierEdge(
-                          source: Offset(
-                            c.source.position.x,
-                            c.source.position.y,
-                          ),
-                          target: Offset(
-                            c.target.position.x,
-                            c.target.position.y,
-                          ),
-                          isDashed: true,
-                          color: Colors.blue,
+                          source: c.source,
+                          target: c.target,
+                          isAnimated: c.isAnimated,
+                          dashAnimationSpeed: c.animationSpeed / 60,
+                          painterBuilder:
+                              (source, target, isAnimated, dashOffset) {
+                                return widget.edgeBuilder?.call(
+                                      source,
+                                      target,
+                                      c,
+                                    ) ??
+                                    c.painter ??
+                                    LukeStepEdgePainter(
+                                      source: source,
+                                      target: target,
+                                      isDashed: true,
+                                      color: Colors.pink,
+                                      strokeWidth: 4,
+                                      horizontalStepPercent: 0.7,
+                                      cornerRadius: 30,
+                                      isAnimated: isAnimated,
+                                      dashOffset: dashOffset,
+                                    );
+                              },
                         );
                       }),
 
