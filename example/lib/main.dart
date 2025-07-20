@@ -99,7 +99,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
               children: [
                 TextButton(
                   onPressed: () {
-                    // controller.centerCanvas();
+                    controller.viewController.center();
                   },
                   child: Text("Center Nodes"),
                 ),
@@ -152,13 +152,25 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                   onPressed: () {
                     // controller.fromJson(diagramJson);
                   },
-                  child: Text("Inport"),
+                  child: Text("Import"),
                 ),
                 TextButton(
                   onPressed: () {
                     // controller.clear();
                   },
                   child: Text("Clear"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    controller.viewController.animateZoomTo(2.0);
+                    controller.viewController.animateZoomAndPanTo(
+                      targetOffset: Offset(300, 200),
+                      targetZoom: 1.5,
+                      duration: Duration(seconds: 2),
+                      curve: Curves.easeOut,
+                    );
+                  },
+                  child: Text("Animate to (100, 100)"),
                 ),
               ],
             ),

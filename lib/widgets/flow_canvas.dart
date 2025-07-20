@@ -107,7 +107,6 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
   EdgeConnectionsModel? ghostConnection;
   late List<EdgeConnectionsModel> _renderedConnections;
 
-  final viewerController = CustomInteractiveViewerController();
   Vector2 mousePositionRelativeToCanvas = Vector2.zero;
 
   @override
@@ -263,7 +262,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                   "custom-interactive-view",
                 ),
                 constrained: false,
-                controller: viewerController,
+                controller: widget.controller.viewController,
                 minScale: 0.2,
                 maxScale: 4,
                 initialScale: 1.0,

@@ -18,6 +18,10 @@ class LukeFlowCanvasController<T> {
   /// Listen to value changes using ValueListenableBuilder
   ValueListenable<FlowCanvasModel<T>> get listenable => _notifier;
 
+  final _viewerController = CustomInteractiveViewerController();
+
+  CustomInteractiveViewerController get viewController => _viewerController;
+
   List<NodeModel<T>> get nodes => data.nodes;
   List<EdgeConnectionsModel> get connections => data.connections;
   final Map<String, GlobalKey> _socketKeys = {};

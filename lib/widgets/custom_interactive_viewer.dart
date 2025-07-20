@@ -8,6 +8,36 @@ class CustomInteractiveViewerController {
   void center() => _state?._center();
   void jumpTo(Offset offset) => _state?._jumpTo(offset);
 
+  void animateTo(
+    Offset targetOffset, {
+    Duration duration = const Duration(milliseconds: 300),
+    Curve curve = Curves.easeInOut,
+  }) {
+    _state?._animateTo(targetOffset, duration: duration, curve: curve);
+  }
+
+  void animateZoomTo(
+    double targetZoom, {
+    Duration duration = const Duration(milliseconds: 300),
+    Curve curve = Curves.easeInOut,
+  }) {
+    _state?._animateZoomTo(targetZoom, duration: duration, curve: curve);
+  }
+
+  void animateZoomAndPanTo({
+    required Offset targetOffset,
+    required double targetZoom,
+    Duration duration = const Duration(milliseconds: 300),
+    Curve curve = Curves.easeInOut,
+  }) {
+    _state?._animateZoomAndPanTo(
+      targetOffset: targetOffset,
+      targetZoom: targetZoom,
+      duration: duration,
+      curve: curve,
+    );
+  }
+
   void _attach(_CustomInteractiveViewerState state) {
     _state = state;
   }
@@ -63,11 +93,22 @@ class CustomInteractiveViewer extends StatefulWidget {
       _CustomInteractiveViewerState();
 }
 
-class _CustomInteractiveViewerState extends State<CustomInteractiveViewer> {
+class _CustomInteractiveViewerState extends State<CustomInteractiveViewer>
+    with TickerProviderStateMixin {
   Offset offset = Offset.zero;
   double scale = 1.0;
   Offset? lastFocalPoint;
   double? initialScaleAtGestureStart;
+
+  AnimationController? _animationController;
+  Animation<Offset>? _offsetAnimation;
+
+  AnimationController? _scaleAnimationController;
+  Animation<double>? _scaleAnimation;
+
+  AnimationController? _zoomPanController;
+  Animation<Offset>? _zoomPanOffsetAnimation;
+  Animation<double>? _zoomPanScaleAnimation;
 
   final GlobalKey _childKey = GlobalKey();
   Size? _childSize;
@@ -84,6 +125,7 @@ class _CustomInteractiveViewerState extends State<CustomInteractiveViewer> {
 
   @override
   void dispose() {
+    _animationController?.dispose();
     widget.controller?._detach();
     super.dispose();
   }
@@ -105,6 +147,87 @@ class _CustomInteractiveViewerState extends State<CustomInteractiveViewer> {
     setState(() {
       offset = pos;
     });
+  }
+
+  void _animateTo(
+    Offset targetOffset, {
+    required Duration duration,
+    required Curve curve,
+  }) {
+    _animationController?.dispose();
+
+    _animationController = AnimationController(vsync: this, duration: duration);
+
+    _offsetAnimation =
+        Tween<Offset>(begin: offset, end: _clampOffset(targetOffset)).animate(
+          CurvedAnimation(parent: _animationController!, curve: curve),
+        )..addListener(() {
+          setState(() {
+            offset = _offsetAnimation!.value;
+          });
+        });
+
+    _animationController!.forward();
+  }
+
+  void _animateZoomTo(
+    double targetZoom, {
+    required Duration duration,
+    required Curve curve,
+  }) {
+    _scaleAnimationController?.dispose();
+
+    targetZoom = targetZoom.clamp(widget.minScale, widget.maxScale);
+
+    _scaleAnimationController = AnimationController(
+      vsync: this,
+      duration: duration,
+    );
+
+    _scaleAnimation =
+        Tween<double>(begin: scale, end: targetZoom).animate(
+          CurvedAnimation(parent: _scaleAnimationController!, curve: curve),
+        )..addListener(() {
+          setState(() {
+            scale = _scaleAnimation!.value;
+            offset = _clampOffset(offset); // Clamp to avoid visual glitches
+          });
+        });
+
+    _scaleAnimationController!.forward();
+  }
+
+  void _animateZoomAndPanTo({
+    required Offset targetOffset,
+    required double targetZoom,
+    required Duration duration,
+    required Curve curve,
+  }) {
+    _zoomPanController?.dispose();
+
+    _zoomPanController = AnimationController(vsync: this, duration: duration);
+
+    final clampedScale = targetZoom.clamp(widget.minScale, widget.maxScale);
+    final clampedOffset = _clampOffset(targetOffset);
+
+    _zoomPanOffsetAnimation = Tween<Offset>(
+      begin: offset,
+      end: clampedOffset,
+    ).animate(CurvedAnimation(parent: _zoomPanController!, curve: curve));
+
+    _zoomPanScaleAnimation = Tween<double>(
+      begin: scale,
+      end: clampedScale,
+    ).animate(CurvedAnimation(parent: _zoomPanController!, curve: curve));
+
+    _zoomPanController!.addListener(() {
+      setState(() {
+        scale = _zoomPanScaleAnimation!.value;
+        offset = _clampOffset(_zoomPanOffsetAnimation!.value);
+      });
+    });
+
+    _zoomPanController!.forward();
   }
 
   void _onScaleStart(ScaleStartDetails details) {
