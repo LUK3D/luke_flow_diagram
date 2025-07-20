@@ -143,20 +143,19 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                 ),
                 TextButton(
                   onPressed: () {
-                    // final result = controller.toJson();
-                    // debugPrint(jsonEncode(result));
+                    debugPrint(controller.toJsonString());
                   },
                   child: Text("Export"),
                 ),
                 TextButton(
                   onPressed: () {
-                    // controller.fromJson(diagramJson);
+                    controller.loadFromJson(diagramJson);
                   },
                   child: Text("Import"),
                 ),
                 TextButton(
                   onPressed: () {
-                    // controller.clear();
+                    controller.clear();
                   },
                   child: Text("Clear"),
                 ),
@@ -171,6 +170,12 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                     );
                   },
                   child: Text("Animate to (100, 100)"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    controller.frame();
+                  },
+                  child: Text("Frame"),
                 ),
               ],
             ),

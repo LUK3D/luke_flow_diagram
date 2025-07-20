@@ -38,6 +38,11 @@ class CustomInteractiveViewerController {
     );
   }
 
+  Size? get viewportSize => _state?._viewportSize;
+  double get zoomLevel => _state?.scale ?? 1.0;
+  double get mimZoomLevel => _state?.widget.minScale ?? .1;
+  double get maxZoomLevel => _state?.widget.maxScale ?? 4.0;
+
   void _attach(_CustomInteractiveViewerState state) {
     _state = state;
   }

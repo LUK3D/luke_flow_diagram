@@ -284,7 +284,6 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                 },
                 boundaryMargin: const EdgeInsets.all(double.infinity),
                 child: Container(
-                  key: widget.controller.canvasKey,
                   width: widget.width,
                   height: widget.height,
                   decoration: BoxDecoration(
@@ -295,6 +294,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                     ),
                   ),
                   child: Stack(
+                    key: widget.controller.canvasKey,
                     alignment: Alignment.center,
                     fit: StackFit.passthrough,
                     children: [
