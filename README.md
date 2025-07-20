@@ -6,6 +6,8 @@ A customizable, interactive **Flutter flow diagram library** inspired by React F
 Supports drag & drop nodes, sockets, edges (Bezier), pan & zoom, and dynamic connections.
 
 
+The full documentation is available on: [Luke Flow Diagram Docs](https://flow.luk3d.com)
+
 ## 🚀 Features
 
 - Custom nodes with builder functions
