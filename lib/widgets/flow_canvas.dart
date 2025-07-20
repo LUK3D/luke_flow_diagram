@@ -98,9 +98,6 @@ class LukeFlowCanvas<T> extends StatefulWidget {
 /// Handles canvas rendering, user interactions,
 /// edge drawing, and node/socket updates.
 class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
-  // late List<EdgeConnectionsModel> connections = widget.initialConnections;
-  // late List<NodeModel<T>> nodes = widget.nodes;
-
   NodeSocketModel? initialSlot;
   NodeSocketModel? hoveringSlot;
   NodeSocketModel? ghostSlot;
@@ -175,7 +172,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
 
     final updatedConnections = [...controller.connections, connection];
 
-    controller.setConnections(updatedConnections); // ✅ FIXED
+    controller.setConnections(updatedConnections);
     updateNodesPosition([node]);
   }
 
@@ -191,7 +188,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
 
     if (box != null && canvasBox != null) {
       final global = box.localToGlobal(Offset.zero);
-      final local = canvasBox!.globalToLocal(global); // relative to canvas
+      final local = canvasBox!.globalToLocal(global);
       return Vector2(local.dx, local.dy + widget.socketHeight / 2);
     }
 
@@ -352,7 +349,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                                 if (canvasBox != null) {
                                   final local = canvasBox!.globalToLocal(
                                     details,
-                                  ); // relative to canvas
+                                  );
 
                                   ghostSlot!.position = Vector2(
                                     local.dx,
@@ -376,7 +373,6 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                               }
 
                               ghostSlot = null;
-                              // ✅ Now safe to trigger controller updates
                               createConnection(hoveringSlot!, node);
                             } else if (hoveringSlot == null &&
                                 initialSlot != null &&
@@ -410,9 +406,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                             );
 
                             if (canvasBox != null) {
-                              final local = canvasBox!.globalToLocal(
-                                details,
-                              ); // relative to canvas
+                              final local = canvasBox!.globalToLocal(details);
 
                               initialSlot!.position = Vector2(
                                 local.dx,
