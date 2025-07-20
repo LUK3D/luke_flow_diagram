@@ -1,7 +1,6 @@
-import 'dart:convert';
-import 'package:example/data.dart';
 import 'package:flutter/material.dart';
 import 'package:luke_flow_diagram/luke_flow_diagram.dart';
+import 'package:luke_flow_diagram/widgets/flow_controller.dart';
 
 import 'utils.dart';
 
@@ -79,9 +78,14 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
       })
       .toList();
 
-  final controller = LukeFlowCanvasController<DataModelExample>();
-
+  final controller = LukeFlowController<DataModelExample>();
   List<String> selectedNodes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    controller.addNodes(nodes);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,62 +100,64 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
               children: [
                 TextButton(
                   onPressed: () {
-                    controller.centerCanvas();
+                    // controller.centerCanvas();
                   },
                   child: Text("Center Nodes"),
                 ),
                 TextButton(
                   onPressed: () {
                     final nodeId = UniqueKey().toString();
-                    controller.addNode(
-                      NodeModel(
-                        position: getRandomPositionNearCenter(spread: 1000),
-                        inputSockets: [
-                          NodeSocketModel(
-                            connectionLimit: 1,
-                            nodeId: nodeId,
-                            id: UniqueKey().toString(),
-                            type: NodeSocketType.input,
-                            position: Vector2.zero,
-                            data: {},
+                    controller.addNodes(
+                      List<NodeModel<DataModelExample>>.from([
+                        NodeModel(
+                          position: getRandomPositionNearCenter(spread: 1000),
+                          inputSockets: [
+                            NodeSocketModel(
+                              connectionLimit: 1,
+                              nodeId: nodeId,
+                              id: UniqueKey().toString(),
+                              type: NodeSocketType.input,
+                              position: Vector2.zero,
+                              data: {},
+                            ),
+                          ],
+                          outputSockets: [
+                            NodeSocketModel(
+                              connectionLimit: 2,
+                              nodeId: nodeId,
+                              id: UniqueKey().toString(),
+                              type: NodeSocketType.output,
+                              position: Vector2.zero,
+                              data: {},
+                            ),
+                          ],
+                          data: DataModelExample(
+                            id: '${nodes.length}',
+                            name: 'Node ${nodes.length}',
+                            description: 'This is the first node',
                           ),
-                        ],
-                        outputSockets: [
-                          NodeSocketModel(
-                            connectionLimit: 2,
-                            nodeId: nodeId,
-                            id: UniqueKey().toString(),
-                            type: NodeSocketType.output,
-                            position: Vector2.zero,
-                            data: {},
-                          ),
-                        ],
-                        data: DataModelExample(
-                          id: '${nodes.length}',
-                          name: 'Node ${nodes.length}',
-                          description: 'This is the first node',
                         ),
-                      ),
+                      ]),
                     );
                   },
                   child: Text("Add node"),
                 ),
                 TextButton(
                   onPressed: () {
-                    final result = controller.toJson();
-                    debugPrint(jsonEncode(result));
+                    // final result = controller.toJson();
+                    // debugPrint(jsonEncode(result));
                   },
                   child: Text("Export"),
                 ),
                 TextButton(
                   onPressed: () {
-                    controller.fromJson(diagramJson);
+                    // controller.fromJson(diagramJson);
                   },
                   child: Text("Inport"),
                 ),
                 TextButton(
                   onPressed: () {
-                    controller.clear();
+                    // controller.clear();
                   },
                   child: Text("Clear"),
                 ),
@@ -208,7 +214,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                     ),
                   ),
                 ]);
-                controller.updateNodesPosition(nodes);
+                // controller.updateNodesPosition(nodes);
               },
               nodeBuilder: (node) {
                 return Material(
@@ -226,7 +232,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                       });
                     },
                     onSecondaryTap: () {
-                      controller.removeNodeById(selectedNodes.first);
+                      // controller.removeNodeById(selectedNodes.first);
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(16),

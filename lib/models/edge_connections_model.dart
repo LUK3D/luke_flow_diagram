@@ -1,8 +1,7 @@
 import 'package:luke_flow_diagram/models/node_model.dart';
-import 'package:luke_flow_diagram/utils/math.dart';
 
 class EdgeConnectionsModel {
-  late String id;
+  late final String id;
   final NodeSocketModel source;
   final NodeSocketModel target;
   final dynamic data;
@@ -15,19 +14,26 @@ class EdgeConnectionsModel {
     id = "${source.id}-${target.id}";
   }
 
-  updateSource(Vector2 value) {
-    source.position = value;
-  }
-
-  updateTarget(Vector2 value) {
-    target.position = value;
+  /// Returns a new copy with updated source and/or target sockets.
+  EdgeConnectionsModel copy({
+    NodeSocketModel? source,
+    NodeSocketModel? target,
+    dynamic data,
+  }) {
+    final newSource = source ?? this.source.copy();
+    final newTarget = target ?? this.target.copy();
+    return EdgeConnectionsModel(
+      source: newSource,
+      target: newTarget,
+      data: data ?? this.data,
+    );
   }
 
   Map<String, dynamic> toJson() {
     return {"id": id, "source": source.toJson(), "target": target.toJson()};
   }
 
-  static fromJson(Map<String, dynamic> json) {
+  static EdgeConnectionsModel fromJson(Map<String, dynamic> json) {
     return EdgeConnectionsModel(
       source: NodeSocketModel.fromJson(json["source"]),
       target: NodeSocketModel.fromJson(json["target"]),

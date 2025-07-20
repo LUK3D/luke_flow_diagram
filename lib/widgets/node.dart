@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luke_flow_diagram/models/node_model.dart';
 import 'package:luke_flow_diagram/utils/math.dart';
+import 'package:luke_flow_diagram/widgets/flow_controller.dart';
 
 class NodeWidget<T> extends StatefulWidget {
   final NodeModel<T> node;
@@ -11,6 +12,7 @@ class NodeWidget<T> extends StatefulWidget {
   final double socketHeight;
   final double socketRadius;
   final Function(NodeModel<T> node) onUpdate;
+  final Function(NodeModel<T> node) onPanEnd;
   final Function(NodeSocketModel socket, Offset details, NodeModel<T> node)
   onSocketPanUpdate;
   final Function(NodeSocketModel socket, Offset details, NodeModel<T> node)
@@ -21,6 +23,7 @@ class NodeWidget<T> extends StatefulWidget {
   onSocketMouseEnter;
   final Function(NodeSocketModel socket, Offset details, NodeModel<T> node)
   onSocketMouseLeave;
+  final LukeFlowController controller;
 
   const NodeWidget({
     super.key,
@@ -36,6 +39,8 @@ class NodeWidget<T> extends StatefulWidget {
     required this.onSocketMouseLeave,
     required this.onSocketPanEnd,
     required this.onSocketPanStart,
+    required this.onPanEnd,
+    required this.controller,
   });
 
   @override
@@ -97,7 +102,7 @@ class _NodeWidgetState<T> extends State<NodeWidget<T>> {
                 child:
                     widget.socketBuilder?.call(widget.node, socket) ??
                     Container(
-                      key: socket.key,
+                      key: widget.controller.getOrCreateSocketKey(socket.id),
                       width: widget.socketWidth,
                       height: widget.socketHeight,
                       decoration: BoxDecoration(
@@ -137,6 +142,9 @@ class _NodeWidgetState<T> extends State<NodeWidget<T>> {
           });
           widget.node.position = position;
           widget.onUpdate(widget.node);
+        },
+        onPanEnd: (details) {
+          widget.onPanEnd(widget.node);
         },
         child: Stack(
           alignment: Alignment.center,

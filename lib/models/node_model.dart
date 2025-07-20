@@ -9,7 +9,6 @@ class NodeSocketModel {
   final NodeSocketType type;
   Vector2 position;
   dynamic data;
-  late GlobalKey key;
   final int connectionLimit;
 
   NodeSocketModel({
@@ -19,14 +18,13 @@ class NodeSocketModel {
     required this.position,
     this.data,
     this.connectionLimit = 500,
+    GlobalKey? key,
   }) {
     this.id = id ?? UniqueKey().toString();
-    key = GlobalKey();
   }
 
   NodeSocketModel.fromJson(Map<String, dynamic> json)
     : id = json['id'],
-      key = GlobalKey(),
       nodeId = json["node_id"],
       connectionLimit = json["max_connections"],
       type = NodeSocketType.values.firstWhere(
@@ -43,6 +41,17 @@ class NodeSocketModel {
       'position': {'x': position.x, 'y': position.y},
       'max_connections': connectionLimit,
     };
+  }
+
+  NodeSocketModel copy() {
+    return NodeSocketModel(
+      id: id,
+      nodeId: nodeId,
+      type: type,
+      position: position.copy(), // assuming Vector2 has copy()
+      data: data, // shallow copy; consider deep copy if needed
+      connectionLimit: connectionLimit,
+    );
   }
 }
 
@@ -61,7 +70,7 @@ class NodeModel<T> {
     List<NodeSocketModel>? inputSockets,
     List<NodeSocketModel>? outputSockets,
   }) {
-    this.id = id ?? UniqueKey().toString();
+    this.id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
     this.key = GlobalKey();
     this.position = position ?? Vector2.zero;
     this.inputSockets = inputSockets ?? [];
@@ -70,7 +79,7 @@ class NodeModel<T> {
       this.inputSockets.addAll([
         NodeSocketModel(
           nodeId: this.id,
-          id: UniqueKey().toString(),
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
           type: NodeSocketType.input,
           position: Vector2.zero,
           data: {},
@@ -79,7 +88,7 @@ class NodeModel<T> {
       this.outputSockets.addAll([
         NodeSocketModel(
           nodeId: this.id,
-          id: UniqueKey().toString(),
+          id: DateTime.now().microsecondsSinceEpoch.toString(),
           type: NodeSocketType.output,
           position: Vector2.zero,
           data: {},
@@ -94,14 +103,14 @@ class NodeModel<T> {
       key = GlobalKey(),
       position = Vector2(json['position']['x'], json['position']['y']),
       outputSockets = List<NodeSocketModel>.from(
-        (json["output_sockets"] as List<Map<String, dynamic>>)
-            .map((ns) => NodeSocketModel.fromJson(ns))
-            .toList(),
+        (json["output_sockets"] as List).map(
+          (ns) => NodeSocketModel.fromJson(ns),
+        ),
       ),
       inputSockets = List<NodeSocketModel>.from(
-        (json["input_sockets"] as List<Map<String, dynamic>>)
-            .map((ns) => NodeSocketModel.fromJson(ns))
-            .toList(),
+        (json["input_sockets"] as List).map(
+          (ns) => NodeSocketModel.fromJson(ns),
+        ),
       );
 
   Map<String, dynamic> toJson() {
@@ -111,5 +120,15 @@ class NodeModel<T> {
       'input_sockets': inputSockets.map((s) => s.toJson()).toList(),
       'output_sockets': outputSockets.map((s) => s.toJson()).toList(),
     };
+  }
+
+  NodeModel<T> copy() {
+    return NodeModel<T>(
+      id: id,
+      data: data,
+      position: position.copy(), // assuming Vector2 has copy()
+      inputSockets: inputSockets.map((s) => s.copy()).toList(),
+      outputSockets: outputSockets.map((s) => s.copy()).toList(),
+    );
   }
 }

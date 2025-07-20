@@ -5,6 +5,7 @@ import 'package:luke_flow_diagram/models/node_model.dart';
 import 'package:luke_flow_diagram/utils/math.dart';
 import 'package:luke_flow_diagram/widgets/edge.dart';
 import 'custom_interactive_viewer.dart';
+import 'flow_controller.dart';
 import 'grid_painter.dart';
 import 'node.dart';
 
@@ -14,7 +15,7 @@ import 'node.dart';
 /// and visualizes connections between nodes using Bezier curves.
 class LukeFlowCanvas<T> extends StatefulWidget {
   /// The controller to interact with the canvas programmatically.
-  final LukeFlowCanvasController<T>? controller;
+  final LukeFlowController<T> controller;
 
   /// The list of initial nodes to be rendered on the canvas.
   final List<NodeModel<T>> nodes;
@@ -71,7 +72,7 @@ class LukeFlowCanvas<T> extends StatefulWidget {
     super.key,
     required this.nodes,
     required this.nodeBuilder,
-    this.controller,
+    required this.controller,
     this.socketBuilder,
     this.socketWidth = 20,
     this.socketHeight = 20,
@@ -97,14 +98,17 @@ class LukeFlowCanvas<T> extends StatefulWidget {
 /// Handles canvas rendering, user interactions,
 /// edge drawing, and node/socket updates.
 class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
-  late List<EdgeConnectionsModel> connections = widget.initialConnections;
+  // late List<EdgeConnectionsModel> connections = widget.initialConnections;
+  // late List<NodeModel<T>> nodes = widget.nodes;
+
   NodeSocketModel? initialSlot;
   NodeSocketModel? hoveringSlot;
   NodeSocketModel? ghostSlot;
   GlobalKey canvasKey = GlobalKey();
   RenderBox? canvasBox;
   late final TransformationController _transformationController;
-  late List<NodeModel<T>> nodes = widget.nodes;
+  EdgeConnectionsModel? ghostConnection;
+  late List<EdgeConnectionsModel> _renderedConnections;
 
   final viewerController = CustomInteractiveViewerController();
   Vector2 mousePositionRelativeToCanvas = Vector2.zero;
@@ -112,22 +116,22 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
   @override
   void initState() {
     super.initState();
-    widget.controller?._attach(this);
-
     _transformationController = TransformationController();
+
+    _renderedConnections = widget.controller.connections;
+
+    widget.controller.listenable.addListener(() {
+      setState(() {
+        _renderedConnections = widget.controller.connections;
+      });
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
-        updateNodesPosition(nodes);
+        updateNodesPosition(widget.controller.nodes);
       });
       centerCanvas();
     });
-  }
-
-  @override
-  void dispose() {
-    widget.controller?._detach();
-    super.dispose();
   }
 
   centerCanvas() {
@@ -143,42 +147,35 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
   }
 
   createConnection(NodeSocketModel socket, NodeModel<T> node) {
-    final previousConnectionsInput = connections
-        .where(
-          (c) =>
-              (c.source.id == socket.id || c.target.id == socket.id) &&
-              c.data != "luke-ghost-socket",
-        )
-        .toList();
-    final previousConnectionsOutput = connections
-        .where(
-          (c) =>
-              (c.source.id == initialSlot!.id ||
-                  c.target.id == initialSlot!.id) &&
-              c.data != "luke-ghost-socket",
-        )
-        .toList();
+    final controller = widget.controller;
 
     final connection = EdgeConnectionsModel(
       source: initialSlot!,
       target: socket,
     );
 
-    if ((previousConnectionsInput.length) >= socket.connectionLimit) {
+    final inputConnections = controller.connections.where(
+      (c) =>
+          (c.source.id == socket.id || c.target.id == socket.id) &&
+          c.data != "luke-ghost-socket",
+    );
+
+    final outputConnections = controller.connections.where(
+      (c) =>
+          (c.source.id == initialSlot!.id || c.target.id == initialSlot!.id) &&
+          c.data != "luke-ghost-socket",
+    );
+
+    if (inputConnections.length >= socket.connectionLimit ||
+        outputConnections.length >= initialSlot!.connectionLimit - 1) {
       widget.onConnectionError?.call(connection);
+      debugPrint("Connection Error!!");
       return;
     }
 
-    /// Remove 1 because when dragi
-    if ((previousConnectionsOutput.length - 1) >=
-        initialSlot!.connectionLimit) {
-      widget.onConnectionError?.call(connection);
-      return;
-    }
+    final updatedConnections = [...controller.connections, connection];
 
-    setState(() {
-      connections.add(connection);
-    });
+    controller.setConnections(updatedConnections); // ✅ FIXED
     updateNodesPosition([node]);
   }
 
@@ -202,27 +199,32 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
   }
 
   updateNodesPosition(List<NodeModel<T>> nodes) {
-    for (var node in nodes) {
-      if (connections.isEmpty) {
-        return;
-      }
-      setState(() {
-        connections = connections.map((c) {
-          for (var s in node.inputSockets.followedBy(node.outputSockets)) {
-            final value = getWidgetPosition(s.key);
-            if ((c.source.id.contains(s.id) && value != null)) {
-              c.source.position = value;
-            }
-            if ((c.target.id.contains(s.id) && value != null)) {
-              c.target.position = value;
-            }
-          }
-          return c;
-        }).toList();
-      });
-    }
+    if (_renderedConnections.isEmpty) return;
 
-    widget.onUpdate?.call(nodes, connections);
+    final updated = _renderedConnections.map((c) {
+      for (var node in nodes) {
+        for (var s in node.inputSockets.followedBy(node.outputSockets)) {
+          final value = getWidgetPosition(
+            widget.controller.getOrCreateSocketKey(s.id),
+          );
+          if (c.source.id == s.id && value != null) {
+            c.source.position = value;
+            debugPrint("${c.source.id} TO ${s.id}");
+          }
+          if (c.target.id == s.id && value != null) {
+            debugPrint(value.toString());
+            c.target.position = value;
+          }
+        }
+      }
+      return c;
+    }).toList();
+
+    setState(() {
+      _renderedConnections = updated;
+    });
+
+    widget.onUpdate?.call(nodes, _renderedConnections);
   }
 
   bool clicking = false;
@@ -238,304 +240,209 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
     clicking = true;
   }
 
-  deleteNodeById(String id) {
-    setState(() {
-      connections.removeWhere(
-        (c) => c.source.nodeId == id || c.target.nodeId == id,
-      );
-      nodes.removeWhere((n) => n.id == id);
-    });
-    widget.onUpdate?.call(nodes, connections);
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        alignment: Alignment.center,
-        children: [
-          BackgroundGrid(
-            settings:
-                widget.bacgrkoundGridSettings ??
-                BackgroundGridSettings(
-                  xDensity: 15.0,
-                  yDensity: 15.0,
-                  showLines: false,
-                  showDots: true,
-                  dotColor: Colors.grey.withAlpha(50),
-                ),
-          ),
-          CustomInteractiveViewer(
-            constrained: false,
-            controller: viewerController,
-            minScale: 0.2,
-            maxScale: 4,
-            initialScale: 1.0,
-            behavior: HitTestBehavior.translucent,
-            onPointerUp: (_) {
-              checkDoubleClick();
-            },
-            onPointerHover: (event) {
-              if (canvasBox != null) {
-                final localPosition = canvasBox!.globalToLocal(event.position);
-                mousePositionRelativeToCanvas = Vector2(
-                  localPosition.dx,
-                  localPosition.dy,
-                );
-                widget.onMouseMove?.call(mousePositionRelativeToCanvas);
-              }
-            },
-            boundaryMargin: const EdgeInsets.all(double.infinity),
-            child: Container(
-              width: widget.width,
-              height: widget.height,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.red,
-                  width: 4,
-                  strokeAlign: BorderSide.strokeAlignCenter,
-                ),
+    return ValueListenableBuilder(
+      valueListenable: widget.controller.listenable,
+      builder: (context, data, _) {
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Stack(
+            alignment: Alignment.center,
+            children: [
+              BackgroundGrid(
+                settings:
+                    widget.bacgrkoundGridSettings ??
+                    BackgroundGridSettings(
+                      xDensity: 15.0,
+                      yDensity: 15.0,
+                      showLines: false,
+                      showDots: true,
+                      dotColor: Colors.grey.withAlpha(50),
+                    ),
               ),
-              child: Stack(
-                key: canvasKey,
-                alignment: Alignment.center,
-                fit: StackFit.passthrough,
-                children: [
-                  ...connections.map((c) {
-                    return BezierEdge(
-                      source: Offset(c.source.position.x, c.source.position.y),
-                      target: Offset(c.target.position.x, c.target.position.y),
-                      isDashed: true,
-                      color: Colors.blue,
+              CustomInteractiveViewer(
+                constrained: false,
+                controller: viewerController,
+                minScale: 0.2,
+                maxScale: 4,
+                initialScale: 1.0,
+                behavior: HitTestBehavior.translucent,
+                onPointerUp: (_) {
+                  checkDoubleClick();
+                },
+                onPointerHover: (event) {
+                  if (canvasBox != null) {
+                    final localPosition = canvasBox!.globalToLocal(
+                      event.position,
                     );
-                  }),
-                  ...nodes.map((node) {
-                    return NodeWidget(
-                      key: ValueKey(node.id),
-                      node: node,
-                      nodeBuilder: widget.nodeBuilder,
-                      socketWidth: widget.socketWidth,
-                      socketHeight: widget.socketHeight,
-                      socketRadius: widget.socketRadius,
-                      socketBuilder: widget.socketBuilder,
-                      onUpdate: (node) {
-                        updateNodesPosition([node]);
-                      },
-                      onSocketPanUpdate: (socket, details, node) {
-                        if (ghostSlot != null) {
-                          setState(() {
+                    mousePositionRelativeToCanvas = Vector2(
+                      localPosition.dx,
+                      localPosition.dy,
+                    );
+                    widget.onMouseMove?.call(mousePositionRelativeToCanvas);
+                  }
+                },
+                boundaryMargin: const EdgeInsets.all(double.infinity),
+                child: Container(
+                  width: widget.width,
+                  height: widget.height,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.red,
+                      width: 4,
+                      strokeAlign: BorderSide.strokeAlignCenter,
+                    ),
+                  ),
+                  child: Stack(
+                    key: canvasKey,
+                    alignment: Alignment.center,
+                    fit: StackFit.passthrough,
+                    children: [
+                      if (ghostConnection != null && ghostSlot != null)
+                        BezierEdge(
+                          source: Offset(
+                            ghostConnection!.source.position.x,
+                            ghostConnection!.source.position.y,
+                          ),
+                          target: Offset(
+                            ghostConnection!.target.position.x,
+                            ghostConnection!.target.position.y,
+                          ),
+                          isDashed: true,
+                          color: Colors.blue,
+                        ),
+
+                      ..._renderedConnections.map((c) {
+                        return BezierEdge(
+                          source: Offset(
+                            c.source.position.x,
+                            c.source.position.y,
+                          ),
+                          target: Offset(
+                            c.target.position.x,
+                            c.target.position.y,
+                          ),
+                          isDashed: true,
+                          color: Colors.blue,
+                        );
+                      }),
+
+                      ...data.nodes.map((node) {
+                        return NodeWidget(
+                          controller: widget.controller,
+                          key: ValueKey(node.id),
+                          node: node,
+                          nodeBuilder: widget.nodeBuilder,
+                          socketWidth: widget.socketWidth,
+                          socketHeight: widget.socketHeight,
+                          socketRadius: widget.socketRadius,
+                          socketBuilder: widget.socketBuilder,
+                          onUpdate: (node) {
+                            updateNodesPosition([node]);
+                          },
+                          onPanEnd: (node) {
+                            widget.controller.setConnections(
+                              _renderedConnections,
+                            );
+                          },
+                          onSocketPanUpdate: (socket, details, node) {
+                            if (ghostSlot != null) {
+                              setState(() {
+                                if (canvasBox != null) {
+                                  final local = canvasBox!.globalToLocal(
+                                    details,
+                                  ); // relative to canvas
+
+                                  ghostSlot!.position = Vector2(
+                                    local.dx,
+                                    local.dy,
+                                  );
+                                }
+                              });
+                            }
+                          },
+                          onSocketPanEnd: (socket, details, node) {
+                            if (hoveringSlot != null &&
+                                initialSlot != null &&
+                                hoveringSlot!.id != initialSlot!.id) {
+                              final pos = getWidgetPosition(
+                                widget.controller.getOrCreateSocketKey(
+                                  hoveringSlot!.id,
+                                ),
+                              );
+                              if (pos != null) {
+                                hoveringSlot!.position = pos;
+                              }
+
+                              ghostSlot = null;
+                              // ✅ Now safe to trigger controller updates
+                              createConnection(hoveringSlot!, node);
+                            } else if (hoveringSlot == null &&
+                                initialSlot != null &&
+                                ghostSlot != null) {
+                              final position = ghostSlot!.position;
+
+                              final tmpInicialSlot = initialSlot;
+
+                              Future.delayed(Duration(milliseconds: 100), () {
+                                widget.onEdgeDrop?.call(
+                                  tmpInicialSlot!,
+                                  position,
+                                );
+                                initialSlot = null;
+                              });
+                            }
+
+                            // Cleanup
+                            initialSlot = null;
+                            ghostSlot = null;
+                            setState(() {});
+                          },
+                          onSocketPanStart: (socket, details, node) {
+                            initialSlot = socket;
+
+                            ghostSlot = NodeSocketModel(
+                              nodeId: node.id,
+                              type: NodeSocketType.inputOutput,
+                              position: Vector2(details.dx, details.dy),
+                              data: "luke-ghost-socket",
+                            );
+
                             if (canvasBox != null) {
                               final local = canvasBox!.globalToLocal(
                                 details,
                               ); // relative to canvas
 
-                              ghostSlot!.position = Vector2(local.dx, local.dy);
+                              initialSlot!.position = Vector2(
+                                local.dx,
+                                local.dy,
+                              );
+                              ghostSlot!.position = initialSlot!.position;
                             }
-                          });
-                        }
-                      },
-                      onSocketPanEnd: (socket, details, node) {
-                        if (hoveringSlot != null &&
-                            initialSlot != null &&
-                            hoveringSlot?.id != initialSlot?.id) {
-                          final pos = getWidgetPosition(hoveringSlot!.key);
-                          if (pos != null) {
-                            hoveringSlot!.position = pos;
-                          }
-                          createConnection(hoveringSlot!, node);
-                        }
-
-                        if (hoveringSlot == null &&
-                            initialSlot != null &&
-                            ghostSlot != null) {
-                          final position = ghostSlot!.position;
-                          Future.delayed(Duration(milliseconds: 100), () {
-                            widget.onEdgeDrop?.call(initialSlot!, position);
-                            initialSlot = null;
-                          });
-                        } else {
-                          initialSlot = null;
-                        }
-
-                        //Remove ghost slot
-                        setState(() {
-                          connections.removeWhere((e) {
-                            return e.target.id == ghostSlot?.id;
-                          });
-                        });
-                        ghostSlot = null;
-                      },
-                      onSocketPanStart: (socket, details, node) {
-                        initialSlot = socket;
-
-                        ghostSlot = NodeSocketModel(
-                          nodeId: node.id,
-                          type: NodeSocketType.inputOutput,
-                          position: Vector2(details.dx, details.dy),
-                          data: "luke-ghost-socket",
+                            setState(() {
+                              ghostConnection = EdgeConnectionsModel(
+                                source: ghostSlot!,
+                                target: initialSlot!,
+                              );
+                            });
+                          },
+                          onSocketMouseEnter: (socket, details, node) {
+                            hoveringSlot = socket;
+                          },
+                          onSocketMouseLeave: (socket, details, node) {
+                            hoveringSlot = null;
+                          },
                         );
-
-                        if (canvasBox != null) {
-                          final local = canvasBox!.globalToLocal(
-                            details,
-                          ); // relative to canvas
-
-                          initialSlot!.position = Vector2(
-                            local.dx,
-                            local.dy + widget.socketHeight / 2,
-                          );
-                          ghostSlot!.position = initialSlot!.position;
-                        }
-                        createConnection(ghostSlot!, node);
-                      },
-                      onSocketMouseEnter: (socket, details, node) {
-                        hoveringSlot = socket;
-                      },
-                      onSocketMouseLeave: (socket, details, node) {
-                        hoveringSlot = null;
-                      },
-                    );
-                  }),
-                ],
+                      }),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
-  }
-}
-
-/// Controller class for interacting with [LukeFlowCanvas] programmatically.
-///
-/// Allows external actions such as centering, adding/removing nodes or edges,
-/// and exporting/importing canvas state.
-class LukeFlowCanvasController<T> {
-  _LukeFlowCanvasState<T>? _state;
-
-  void _attach(_LukeFlowCanvasState<T> state) {
-    _state = state;
-  }
-
-  void _detach() {
-    _state = null;
-  }
-
-  void centerCanvas() {
-    _state?.viewerController.center();
-  }
-
-  void updateNodesPosition(List<NodeModel<T>> nodes) {
-    _state?.updateNodesPosition(nodes);
-  }
-
-  void addConnection(EdgeConnectionsModel connection) {
-    _state?.setCustomState(() {
-      _state?.connections.add(connection);
-    });
-  }
-
-  void addConnections(List<EdgeConnectionsModel> connections) {
-    _state?.setCustomState(() {
-      _state?.connections.addAll(connections);
-    });
-  }
-
-  void addNode(NodeModel<T> node) {
-    _state?.setCustomState(() {
-      _state?.nodes.add(node);
-    });
-  }
-
-  void addNodes(List<NodeModel<T>> nodes) {
-    _state?.setCustomState(() {
-      _state?.nodes.addAll(nodes);
-    });
-  }
-
-  void removeConnection(String sourceId, String targetId) {
-    _state?.setCustomState(() {
-      _state?.connections.removeWhere(
-        (c) => c.source.id == sourceId && c.target.id == targetId,
-      );
-    });
-  }
-
-  void removeConnectionById(String id) {
-    _state?.setCustomState(() {
-      _state?.connections.removeWhere((c) => c.id == id);
-    });
-  }
-
-  void removeNodesById(List<String> nodeIds) {
-    _state?.setCustomState(() {
-      _state!.connections.removeWhere((n) {
-        return nodeIds.contains(n.id);
-      });
-
-      final List<NodeModel<T>> deletedNodes = [];
-      _state!.nodes.removeWhere((n) {
-        if (nodeIds.contains(n.id)) {
-          debugPrint("DELETING: ${n.id}, ${n.data}");
-          deletedNodes.add(n);
-        }
-        return nodeIds.contains(n.id);
-      });
-
-      _state?.widget.onNodesDeleted?.call(deletedNodes);
-    });
-  }
-
-  void removeNodeById(String nodeId) {
-    _state?.deleteNodeById(nodeId);
-  }
-
-  void clear() {
-    _state?.setCustomState(() {
-      final deletedNodes = _state!.nodes;
-      _state!.nodes = [];
-      _state!.connections = [];
-      _state?.widget.onNodesDeleted?.call(deletedNodes);
-    });
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "nodes": this.nodes.map((e) => e.toJson()).toList(),
-      "connections": this.connections.map((e) => e.toJson()).toList(),
-    };
-  }
-
-  void fromJson(Map<String, dynamic> json) {
-    clear();
-    Future.delayed(Duration(milliseconds: 100), () {
-      addNodes(
-        List<NodeModel<T>>.from(
-          (json["nodes"] as List<Map<String, dynamic>>).map(
-            (n) => NodeModel<T>.fromJson(n),
-          ),
-        ).toList(),
-      );
-      addConnections(
-        List<EdgeConnectionsModel>.from(
-          (json["connections"] as List).map(
-            (n) => EdgeConnectionsModel.fromJson(n),
-          ),
-        ).toList(),
-      );
-    });
-  }
-
-  List<EdgeConnectionsModel> get connections => _state?.connections ?? [];
-
-  List<NodeModel<T>> get nodes => _state?.nodes ?? [];
-
-  void setTransformation(Matrix4 matrix) {
-    _state?._transformationController.value = matrix;
-  }
-
-  Matrix4? getTransformation() {
-    return _state?._transformationController.value;
   }
 }
