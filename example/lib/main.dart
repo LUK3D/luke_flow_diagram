@@ -1,7 +1,6 @@
 import 'package:example/data.dart';
 import 'package:flutter/material.dart';
 import 'package:luke_flow_diagram/luke_flow_diagram.dart';
-import 'package:luke_flow_diagram/widgets/flow_controller.dart';
 import 'utils.dart';
 
 void main() {
