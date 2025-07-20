@@ -23,7 +23,7 @@ class NodeWidget<T> extends StatefulWidget {
   onSocketMouseEnter;
   final Function(NodeSocketModel socket, Offset details, NodeModel<T> node)
   onSocketMouseLeave;
-  final LukeFlowController controller;
+  final LukeFlowCanvasController controller;
 
   const NodeWidget({
     super.key,
@@ -58,6 +58,7 @@ class _NodeWidgetState<T> extends State<NodeWidget<T>> {
           .where((s) => s.type == type)
           .map((socket) {
             return GestureDetector(
+              key: ValueKey("socket-gesture-detector-${socket.id}"),
               onPanStart: (details) {
                 socket.position = Vector2(
                   details.globalPosition.dx,
@@ -84,36 +85,41 @@ class _NodeWidgetState<T> extends State<NodeWidget<T>> {
                   widget.node,
                 );
               },
-              child: MouseRegion(
-                onEnter: (event) {
-                  widget.onSocketMouseEnter(
-                    socket,
-                    Offset(socket.position.x, socket.position.y),
-                    widget.node,
-                  );
-                },
-                onExit: (event) {
-                  widget.onSocketMouseLeave(
-                    socket,
-                    Offset(socket.position.x, socket.position.y),
-                    widget.node,
-                  );
-                },
-                child:
-                    widget.socketBuilder?.call(widget.node, socket) ??
-                    Container(
-                      key: widget.controller.getOrCreateSocketKey(socket.id),
-                      width: widget.socketWidth,
-                      height: widget.socketHeight,
-                      decoration: BoxDecoration(
-                        color: socket.type == NodeSocketType.output
-                            ? Colors.pink
-                            : Colors.purple,
-                        borderRadius: BorderRadius.circular(
-                          widget.socketRadius,
+              child: SizedBox(
+                width: widget.socketWidth,
+                height: widget.socketHeight,
+                child: MouseRegion(
+                  key: UniqueKey(),
+                  onEnter: (event) {
+                    widget.onSocketMouseEnter(
+                      socket,
+                      Offset(socket.position.x, socket.position.y),
+                      widget.node,
+                    );
+                  },
+                  onExit: (event) {
+                    widget.onSocketMouseLeave(
+                      socket,
+                      Offset(socket.position.x, socket.position.y),
+                      widget.node,
+                    );
+                  },
+                  child:
+                      widget.socketBuilder?.call(widget.node, socket) ??
+                      Container(
+                        key: widget.controller.getOrCreateSocketKey(socket.id),
+                        width: widget.socketWidth,
+                        height: widget.socketHeight,
+                        decoration: BoxDecoration(
+                          color: socket.type == NodeSocketType.output
+                              ? Colors.pink
+                              : Colors.purple,
+                          borderRadius: BorderRadius.circular(
+                            widget.socketRadius,
+                          ),
                         ),
                       ),
-                    ),
+                ),
               ),
             );
           })

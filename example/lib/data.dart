@@ -1,3 +1,29 @@
+import 'dart:ui';
+
+class DataModelExample {
+  final String id;
+  final String name;
+  final String description;
+  final Color? color;
+
+  DataModelExample({
+    this.color,
+    required this.id,
+    required this.name,
+    required this.description,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'name': name, 'description': description};
+  }
+
+  DataModelExample.fromJson(Map<String, dynamic> json)
+    : id = json['id'],
+      name = json['name'],
+      description = json['description'],
+      color = json['color'] != null ? Color(json['color']) : null;
+}
+
 final diagramJson = {
   "nodes": [
     {

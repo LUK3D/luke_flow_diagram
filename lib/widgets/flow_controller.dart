@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:luke_flow_diagram/luke_flow_diagram.dart';
 import 'package:luke_flow_diagram/models/flow_canvas_model.dart';
 
-class LukeFlowController<T> {
+class LukeFlowCanvasController<T> {
   /// Internal data storage and reactive notifier
-  final ValueNotifier<FlowCanvasModel<T>> _notifier;
+  late ValueNotifier<FlowCanvasModel<T>> _notifier;
 
-  LukeFlowController()
-    : _notifier = ValueNotifier(FlowCanvasModel(nodes: [], connections: []));
+  LukeFlowCanvasController() {
+    _notifier = ValueNotifier(FlowCanvasModel(nodes: [], connections: []));
+    debugPrint("[LukeFlow] Controller initialized");
+  }
 
   /// Exposes the current model
   FlowCanvasModel<T> get data => _notifier.value;
@@ -19,6 +21,10 @@ class LukeFlowController<T> {
   List<NodeModel<T>> get nodes => data.nodes;
   List<EdgeConnectionsModel> get connections => data.connections;
   final Map<String, GlobalKey> _socketKeys = {};
+
+  final GlobalKey _canvasKey = GlobalKey();
+
+  GlobalKey get canvasKey => _canvasKey;
 
   GlobalKey getOrCreateSocketKey(String socketId) {
     return _socketKeys.putIfAbsent(

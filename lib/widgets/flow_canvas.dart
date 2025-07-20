@@ -15,7 +15,7 @@ import 'node.dart';
 /// and visualizes connections between nodes using Bezier curves.
 class LukeFlowCanvas<T> extends StatefulWidget {
   /// The controller to interact with the canvas programmatically.
-  final LukeFlowController<T> controller;
+  final LukeFlowCanvasController<T> controller;
 
   /// The list of initial nodes to be rendered on the canvas.
   final List<NodeModel<T>> nodes;
@@ -101,7 +101,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
   NodeSocketModel? initialSlot;
   NodeSocketModel? hoveringSlot;
   NodeSocketModel? ghostSlot;
-  GlobalKey canvasKey = GlobalKey();
+
   RenderBox? canvasBox;
   late final TransformationController _transformationController;
   EdgeConnectionsModel? ghostConnection;
@@ -132,7 +132,9 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
   }
 
   centerCanvas() {
-    canvasBox = canvasKey.currentContext?.findRenderObject() as RenderBox?;
+    canvasBox =
+        widget.controller.canvasKey.currentContext?.findRenderObject()
+            as RenderBox?;
     final size = context.size;
     if (size != null) {
       final canvasSize = Size(widget.width, widget.height);
@@ -206,10 +208,8 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
           );
           if (c.source.id == s.id && value != null) {
             c.source.position = value;
-            debugPrint("${c.source.id} TO ${s.id}");
           }
           if (c.target.id == s.id && value != null) {
-            debugPrint(value.toString());
             c.target.position = value;
           }
         }
@@ -259,6 +259,9 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                     ),
               ),
               CustomInteractiveViewer(
+                key: widget.controller.getOrCreateSocketKey(
+                  "custom-interactive-view",
+                ),
                 constrained: false,
                 controller: viewerController,
                 minScale: 0.2,
@@ -282,6 +285,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                 },
                 boundaryMargin: const EdgeInsets.all(double.infinity),
                 child: Container(
+                  key: widget.controller.canvasKey,
                   width: widget.width,
                   height: widget.height,
                   decoration: BoxDecoration(
@@ -292,7 +296,6 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                     ),
                   ),
                   child: Stack(
-                    key: canvasKey,
                     alignment: Alignment.center,
                     fit: StackFit.passthrough,
                     children: [
@@ -328,7 +331,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                       ...data.nodes.map((node) {
                         return NodeWidget(
                           controller: widget.controller,
-                          key: ValueKey(node.id),
+                          key: ValueKey("node-${node.id}"),
                           node: node,
                           nodeBuilder: widget.nodeBuilder,
                           socketWidth: widget.socketWidth,

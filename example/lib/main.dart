@@ -1,7 +1,7 @@
+import 'package:example/data.dart';
 import 'package:flutter/material.dart';
 import 'package:luke_flow_diagram/luke_flow_diagram.dart';
 import 'package:luke_flow_diagram/widgets/flow_controller.dart';
-
 import 'utils.dart';
 
 void main() {
@@ -39,7 +39,7 @@ class LukeFlowDiagram extends StatefulWidget {
 
 class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
   List<EdgeConnectionsModel> connections = [];
-  List<NodeModel<DataModelExample>> nodes = List.generate(5, (index) => index)
+  List<NodeModel<DataModelExample>> nodes = List.generate(1, (index) => index)
       .map((i) {
         final nodeId = DateTime.now()
             .add(Duration(seconds: i))
@@ -78,7 +78,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
       })
       .toList();
 
-  final controller = LukeFlowController<DataModelExample>();
+  final controller = LukeFlowCanvasController<DataModelExample>();
   List<String> selectedNodes = [];
 
   @override
@@ -259,28 +259,4 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
       ),
     );
   }
-}
-
-class DataModelExample {
-  final String id;
-  final String name;
-  final String description;
-  final Color? color;
-
-  DataModelExample({
-    this.color,
-    required this.id,
-    required this.name,
-    required this.description,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'description': description};
-  }
-
-  DataModelExample.fromJson(Map<String, dynamic> json)
-    : id = json['id'],
-      name = json['name'],
-      description = json['description'],
-      color = json['color'] != null ? Color(json['color']) : null;
 }

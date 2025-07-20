@@ -6,3 +6,4 @@ export 'package:luke_flow_diagram/widgets/node.dart';
 export 'package:luke_flow_diagram/utils/math.dart';
 export 'package:luke_flow_diagram/models/edge_connections_model.dart';
 export 'package:luke_flow_diagram/models/node_model.dart';
+export 'package:luke_flow_diagram/widgets/flow_controller.dart';
