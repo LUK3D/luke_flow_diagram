@@ -38,6 +38,9 @@ class CustomInteractiveViewerController {
     );
   }
 
+  Offset? get viewportCenter =>
+      _state?._getViewportCenterInContentCoordinates();
+
   Size? get viewportSize => _state?._viewportSize;
   double get zoomLevel => _state?.scale ?? 1.0;
   double get mimZoomLevel => _state?.widget.minScale ?? .1;
@@ -233,6 +236,19 @@ class _CustomInteractiveViewerState extends State<CustomInteractiveViewer>
     });
 
     _zoomPanController!.forward();
+  }
+
+  Offset _getViewportCenterInContentCoordinates() {
+    if (_viewportSize == null) return Offset.zero;
+
+    final centerInViewport = Offset(
+      _viewportSize!.width / 2,
+      _viewportSize!.height / 2,
+    );
+
+    final centerInContent = (centerInViewport - offset) / scale;
+
+    return centerInContent;
   }
 
   void _onScaleStart(ScaleStartDetails details) {
