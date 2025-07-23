@@ -257,19 +257,34 @@ class _CustomInteractiveViewerState extends State<CustomInteractiveViewer>
   }
 
   void _onScaleUpdate(ScaleUpdateDetails details) {
+    if (initialScaleAtGestureStart == null || lastFocalPoint == null) return;
+
     final newScale = (initialScaleAtGestureStart! * details.scale).clamp(
       widget.minScale,
       widget.maxScale,
     );
 
-    final delta = details.focalPoint - lastFocalPoint!;
-    final proposedOffset = offset + delta;
+    if ((details.scale - 1.0).abs() > 0.01) {
+      // It's a pinch-to-zoom gesture
+      final focalPoint = details.focalPoint;
+      final scaleRatio = newScale / scale;
+      final newOffset = (offset - focalPoint) * scaleRatio + focalPoint;
 
-    setState(() {
-      scale = newScale;
-      offset = _clampOffset(proposedOffset);
-      lastFocalPoint = details.focalPoint;
-    });
+      setState(() {
+        scale = newScale;
+        offset = _clampOffset(newOffset);
+        lastFocalPoint = focalPoint;
+      });
+    } else {
+      // It's a drag/pan gesture
+      final delta = details.focalPoint - lastFocalPoint!;
+      final newOffset = offset + delta;
+
+      setState(() {
+        offset = _clampOffset(newOffset);
+        lastFocalPoint = details.focalPoint;
+      });
+    }
   }
 
   void _onPointerSignal(PointerSignalEvent event) {
