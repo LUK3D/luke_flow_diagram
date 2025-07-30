@@ -42,8 +42,6 @@ class MyFlowCanvas extends StatelessWidget {
 
     return LukeFlowCanvas<DataModelExample>(
         controller: controller,
-        nodes: nodes,
-        initialConnections: connections,
         nodeBuilder: (node) {
             //Create your custom nodes here
             return Container(
