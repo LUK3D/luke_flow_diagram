@@ -11,8 +11,8 @@ class BackgroundGridSettings {
   final Color? dotColor;
 
   const BackgroundGridSettings({
-    required this.xDensity,
-    required this.yDensity,
+    this.xDensity = 15.0,
+    this.yDensity = 15.0,
     this.showLines,
     this.showDots,
     this.lineColor,

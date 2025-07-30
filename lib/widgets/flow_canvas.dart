@@ -53,6 +53,9 @@ class LukeFlowCanvas<T> extends StatefulWidget {
   /// Settings for the backgrouind grid
   final BackgroundGridSettings? bacgrkoundGridSettings;
 
+  /// Settings for the backgrouind grid
+  final BackgroundGridSettings? secondaryBacgrkoundGridSettings;
+
   /// Handles connection error
   final Function(EdgeConnectionsModel connection)? onConnectionError;
 
@@ -85,6 +88,7 @@ class LukeFlowCanvas<T> extends StatefulWidget {
     this.height = 2024 * 8,
     this.onMouseMove,
     this.bacgrkoundGridSettings,
+    this.secondaryBacgrkoundGridSettings,
     this.onConnectionError,
     this.onEdgeDrop,
     this.onNodesDeleted,
@@ -259,6 +263,10 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                       dotColor: Colors.grey.withAlpha(50),
                     ),
               ),
+              if (widget.secondaryBacgrkoundGridSettings != null)
+                BackgroundGrid(
+                  settings: widget.secondaryBacgrkoundGridSettings!,
+                ),
               CustomInteractiveViewer(
                 key: widget.controller.getOrCreateSocketKey(
                   "custom-interactive-view",

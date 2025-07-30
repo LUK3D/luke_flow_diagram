@@ -7,3 +7,4 @@ export 'package:luke_flow_diagram/utils/math.dart';
 export 'package:luke_flow_diagram/models/edge_connections_model.dart';
 export 'package:luke_flow_diagram/models/node_model.dart';
 export 'package:luke_flow_diagram/widgets/flow_controller.dart';
+export 'package:luke_flow_diagram/models/grid_background_settings.dart';
