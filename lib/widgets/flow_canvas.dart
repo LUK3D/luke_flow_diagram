@@ -19,12 +19,6 @@ class LukeFlowCanvas<T> extends StatefulWidget {
   /// The controller to interact with the canvas programmatically.
   final LukeFlowCanvasController<T> controller;
 
-  /// The list of initial nodes to be rendered on the canvas.
-  final List<NodeModel<T>> nodes;
-
-  /// The list of initial edge connections between nodes.
-  final List<EdgeConnectionsModel> initialConnections;
-
   /// Builds a custom widget for each node.
   final Widget Function(NodeModel<T> node) nodeBuilder;
 
@@ -79,14 +73,13 @@ class LukeFlowCanvas<T> extends StatefulWidget {
 
   const LukeFlowCanvas({
     super.key,
-    required this.nodes,
-    required this.nodeBuilder,
     required this.controller,
+    required this.nodeBuilder,
     this.socketBuilder,
+    this.edgeBuilder,
     this.socketWidth = 20,
     this.socketHeight = 20,
     this.socketRadius = 100,
-    this.initialConnections = const [],
     this.onUpdate,
     this.width = 2024 * 8,
     this.height = 2024 * 8,
@@ -96,7 +89,6 @@ class LukeFlowCanvas<T> extends StatefulWidget {
     this.onEdgeDrop,
     this.onNodesDeleted,
     this.onDoubleTap,
-    this.edgeBuilder,
   });
 
   @override

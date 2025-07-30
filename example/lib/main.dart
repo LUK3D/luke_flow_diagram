@@ -203,8 +203,6 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
           Expanded(
             child: LukeFlowCanvas<DataModelExample>(
               controller: controller,
-              nodes: nodes,
-              initialConnections: connections,
               onEdgeDrop: (source, dropPosition) {
                 /// You can create a new node when you drop the connection edge on the canvas by using the onEdgeDrop .
               },
