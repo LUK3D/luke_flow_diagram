@@ -96,7 +96,7 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
     if (connection == null) return;
 
     controller.updateConnection(
-      connection.copyWith(isAnimated: true, animationSpeed: 5),
+      connection.copyWith(isAnimated: true, animationSpeed: 1),
     );
   }
 

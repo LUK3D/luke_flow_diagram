@@ -34,8 +34,6 @@ class _BezierEdgeState extends State<BezierEdge> with TickerProviderStateMixin {
   late final Ticker _ticker;
   double _dashOffset = 0.0;
 
-  late final double dashSpeed = widget.dashAnimationSpeed;
-
   @override
   void initState() {
     super.initState();
@@ -44,7 +42,7 @@ class _BezierEdgeState extends State<BezierEdge> with TickerProviderStateMixin {
 
   void _onTick(Duration elapsed) {
     setState(() {
-      _dashOffset += dashSpeed;
+      _dashOffset += widget.dashAnimationSpeed;
     });
   }
 

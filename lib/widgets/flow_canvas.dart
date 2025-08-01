@@ -329,7 +329,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                           source: c.source,
                           target: c.target,
                           isAnimated: c.isAnimated,
-                          dashAnimationSpeed: c.animationSpeed / 60,
+                          dashAnimationSpeed: c.animationSpeed,
                           painterBuilder:
                               (source, target, isAnimated, dashOffset) {
                                 return widget.edgeBuilder?.call(
@@ -346,7 +346,8 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
                                       strokeWidth: 4,
                                       horizontalStepPercent: 0.7,
                                       cornerRadius: 30,
-                                      isAnimated: isAnimated,
+                                      isAnimated: c.isAnimated,
+                                      dashAnimationSpeed: c.animationSpeed,
                                       dashOffset: dashOffset,
                                     );
                               },
