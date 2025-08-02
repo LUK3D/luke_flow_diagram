@@ -1,12 +1,15 @@
 # Luke Flow Diagram
 
-![Flow Diagram Screenshot](https://raw.githubusercontent.com/LUK3D/luke_flow_diagram/refs/heads/master/screenshots/01.png)
+![Flow Diagram Screenshot](https://raw.githubusercontent.com/LUK3D/luke_flow_diagram/refs/heads/master/screenshots/animated_edges.gif)
 
 A customizable, interactive **Flutter flow diagram library** inspired by React Flow.  
 Supports drag & drop nodes, sockets, edges (Bezier), pan & zoom, and dynamic connections.
 
 
 The full documentation is available on: [Luke Flow Diagram Docs](https://flow.luk3d.com)
+
+Demo: [Luke Flow Diagram demo](https://flow.luk3d.com/demo)
+
 
 ## 🚀 Features
 
