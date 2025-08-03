@@ -2,11 +2,11 @@
 import 'package:luke_flow_diagram/models/node_model.dart';
 import 'package:luke_flow_diagram/widgets/edges/bezier.dart';
 
-class EdgeConnectionsModel {
+class EdgeConnectionsModel<E> {
   late final String id;
   final NodeSocketModel source;
   final NodeSocketModel target;
-  final dynamic data;
+  final E? data;
   final LukeEdgePainter? painter;
   final double animationSpeed;
   final bool isAnimated;
@@ -24,17 +24,17 @@ class EdgeConnectionsModel {
   }
 
   /// Returns a new copy with updated source and/or target sockets.
-  EdgeConnectionsModel copy({
+  EdgeConnectionsModel<E> copy({
     NodeSocketModel? source,
     NodeSocketModel? target,
-    dynamic data,
+    E? data,
     LukeEdgePainter? painter,
     double? animationSpeed,
     bool? isAnimated,
   }) {
     final newSource = source ?? this.source.copy();
     final newTarget = target ?? this.target.copy();
-    return EdgeConnectionsModel(
+    return EdgeConnectionsModel<E>(
       source: newSource,
       target: newTarget,
       data: data ?? this.data,
@@ -48,23 +48,23 @@ class EdgeConnectionsModel {
     return {"id": id, "source": source.toJson(), "target": target.toJson()};
   }
 
-  static EdgeConnectionsModel fromJson(Map<String, dynamic> json) {
-    return EdgeConnectionsModel(
+  static EdgeConnectionsModel<E> fromJson<E>(Map<String, dynamic> json) {
+    return EdgeConnectionsModel<E>(
       source: NodeSocketModel.fromJson(json["source"]),
       target: NodeSocketModel.fromJson(json["target"]),
     );
   }
 
-  EdgeConnectionsModel copyWith({
+  EdgeConnectionsModel<E> copyWith({
     String? id,
     NodeSocketModel? source,
     NodeSocketModel? target,
-    dynamic data,
+    E? data,
     LukeEdgePainter? painter,
     double? animationSpeed,
     bool? isAnimated,
   }) {
-    return EdgeConnectionsModel(
+    return EdgeConnectionsModel<E>(
       id: id ?? this.id,
       source: source ?? this.source,
       target: target ?? this.target,

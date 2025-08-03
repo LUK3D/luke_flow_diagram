@@ -4,27 +4,30 @@ import 'dart:convert';
 import 'edge_connections_model.dart';
 import 'node_model.dart';
 
-class FlowCanvasModel<T> {
+class FlowCanvasModel<T, E> {
   final List<NodeModel<T>> nodes;
-  final List<EdgeConnectionsModel> connections;
+  final List<EdgeConnectionsModel<E>> connections;
 
   FlowCanvasModel({required this.nodes, required this.connections});
 
-  FlowCanvasModel<T> copy() {
-    return FlowCanvasModel<T>(
+  FlowCanvasModel<T, E> copy() {
+    return FlowCanvasModel<T, E>(
       nodes: nodes.map((node) => node.copy()).toList(),
-      connections: connections.map((c) => c.copy()).toList(),
+      connections: List<EdgeConnectionsModel<E>>.from(
+        connections.map((c) => c.copy()).toList(),
+      ),
     );
   }
 
-  FlowCanvasModel<T> copyWith({
+  FlowCanvasModel<T, E> copyWith({
     List<NodeModel<T>>? nodes,
     List<EdgeConnectionsModel>? connections,
   }) {
-    return FlowCanvasModel<T>(
+    return FlowCanvasModel<T, E>(
       nodes: nodes ?? this.nodes.map((n) => n.copy()).toList(),
-      connections:
-          connections ?? this.connections.map((c) => c.copy()).toList(),
+      connections: List<EdgeConnectionsModel<E>>.from(
+        connections ?? this.connections.map((c) => c.copy()).toList(),
+      ),
     );
   }
 
@@ -36,15 +39,15 @@ class FlowCanvasModel<T> {
   }
 
   factory FlowCanvasModel.fromMap(Map<String, dynamic> map) {
-    return FlowCanvasModel<T>(
+    return FlowCanvasModel<T, E>(
       nodes: List<NodeModel<T>>.from(
         (map['nodes'] as List<Map<String, Object>>).map<NodeModel<T>>(
           (x) => NodeModel<T>.fromJson(x as Map<String, dynamic>),
         ),
       ),
-      connections: List<EdgeConnectionsModel>.from(
+      connections: List<EdgeConnectionsModel<E>>.from(
         (map['connections'] as List<Map<String, Object>>)
-            .map<EdgeConnectionsModel>(
+            .map<EdgeConnectionsModel<E>>(
               (x) => EdgeConnectionsModel.fromJson(x as Map<String, dynamic>),
             ),
       ),

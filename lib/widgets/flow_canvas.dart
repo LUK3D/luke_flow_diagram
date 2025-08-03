@@ -15,9 +15,9 @@ import 'node.dart';
 ///
 /// [LukeFlowCanvas] supports draggable nodes, connectable sockets,
 /// and visualizes connections between nodes using Bezier curves.
-class LukeFlowCanvas<T> extends StatefulWidget {
+class LukeFlowCanvas<T, E> extends StatefulWidget {
   /// The controller to interact with the canvas programmatically.
-  final LukeFlowCanvasController<T> controller;
+  final LukeFlowCanvasController<T, E> controller;
 
   /// Builds a custom widget for each node.
   final Widget Function(NodeModel<T> node) nodeBuilder;
@@ -62,10 +62,19 @@ class LukeFlowCanvas<T> extends StatefulWidget {
   /// Occurs when an edge is droped on the canvas without a target
   final Function(NodeSocketModel source, Vector2 dropPosition)? onEdgeDrop;
 
-  final Function(List<NodeModel> deletedNode)? onNodesDeleted;
+  final Function(List<NodeModel<T>> deletedNode)? onNodesDeleted;
 
   /// Triggered when user double taps the canvas
   final Function(Vector2 mousePosition)? onDoubleTap;
+
+  /// Callback triggered before a connection is created.
+  /// It allows modifying the connection or returning null to cancel it.
+  final EdgeConnectionsModel<E>? Function(
+    EdgeConnectionsModel<E> connection,
+    NodeSocketModel inputSocker,
+    NodeSocketModel outputSocket,
+  )?
+  onBeforeConnectionCreate;
 
   final LukeEdgePainter Function(
     Offset source,
@@ -93,25 +102,26 @@ class LukeFlowCanvas<T> extends StatefulWidget {
     this.onEdgeDrop,
     this.onNodesDeleted,
     this.onDoubleTap,
+    this.onBeforeConnectionCreate,
   });
 
   @override
-  State<LukeFlowCanvas<T>> createState() => _LukeFlowCanvasState<T>();
+  State<LukeFlowCanvas<T, E>> createState() => _LukeFlowCanvasState<T, E>();
 }
 
 /// The internal state for [LukeFlowCanvas].
 ///
 /// Handles canvas rendering, user interactions,
 /// edge drawing, and node/socket updates.
-class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
+class _LukeFlowCanvasState<T, E> extends State<LukeFlowCanvas<T, E>> {
   NodeSocketModel? initialSlot;
   NodeSocketModel? hoveringSlot;
   NodeSocketModel? ghostSlot;
 
   RenderBox? canvasBox;
   late final TransformationController _transformationController;
-  EdgeConnectionsModel? ghostConnection;
-  late List<EdgeConnectionsModel> _renderedConnections;
+  EdgeConnectionsModel<E>? ghostConnection;
+  late List<EdgeConnectionsModel<E>> _renderedConnections;
 
   Vector2 mousePositionRelativeToCanvas = Vector2.zero;
 
@@ -153,7 +163,7 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
   createConnection(NodeSocketModel socket, NodeModel<T> node) {
     final controller = widget.controller;
 
-    final connection = EdgeConnectionsModel(
+    EdgeConnectionsModel<E> connection = EdgeConnectionsModel<E>(
       source: initialSlot!,
       target: socket,
     );
@@ -175,6 +185,19 @@ class _LukeFlowCanvasState<T> extends State<LukeFlowCanvas<T>> {
       widget.onConnectionError?.call(connection);
       debugPrint("Connection Error!!");
       return;
+    }
+
+    if (widget.onBeforeConnectionCreate != null) {
+      final result = widget.onBeforeConnectionCreate!(
+        connection,
+        initialSlot!,
+        socket,
+      );
+      if (result == null) {
+        return;
+      }
+
+      connection = result;
     }
 
     final updatedConnections = [...controller.connections, connection];

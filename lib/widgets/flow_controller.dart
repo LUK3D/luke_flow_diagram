@@ -4,8 +4,8 @@ import 'package:luke_flow_diagram/luke_flow_diagram.dart';
 import 'package:luke_flow_diagram/models/flow_canvas_model.dart';
 
 /// A controller for managing the state and interactions of a LukeFlow canvas.
-class LukeFlowCanvasController<T> {
-  late ValueNotifier<FlowCanvasModel<T>> _notifier;
+class LukeFlowCanvasController<T, E> {
+  late ValueNotifier<FlowCanvasModel<T, E>> _notifier;
 
   /// # LukeFlowCanvasController
   /// Creates a new [LukeFlowCanvasController] instance.
@@ -16,11 +16,11 @@ class LukeFlowCanvasController<T> {
 
   /// # data
   /// The current canvas data (nodes and connections).
-  FlowCanvasModel<T> get data => _notifier.value;
+  FlowCanvasModel<T, E> get data => _notifier.value;
 
   /// # listenable
   /// A listenable that notifies changes to the canvas data.
-  ValueListenable<FlowCanvasModel<T>> get listenable => _notifier;
+  ValueListenable<FlowCanvasModel<T, E>> get listenable => _notifier;
 
   final _viewerController = CustomInteractiveViewerController();
 
@@ -34,7 +34,7 @@ class LukeFlowCanvasController<T> {
 
   /// # connections
   /// The list of current connections in the canvas.
-  List<EdgeConnectionsModel> get connections => data.connections;
+  List<EdgeConnectionsModel<E>> get connections => data.connections;
 
   final Map<String, GlobalKey> _socketKeys = {};
 
@@ -73,9 +73,9 @@ class LukeFlowCanvasController<T> {
 
   /// # setConnections
   /// Replaces the current connections with a new list.
-  void setConnections(List<EdgeConnectionsModel> connections) {
+  void setConnections(List<EdgeConnectionsModel<E>> connections) {
     _notifier.value = data.copyWith(
-      connections: List<EdgeConnectionsModel>.from(connections),
+      connections: List<EdgeConnectionsModel<E>>.from(connections),
     );
   }
 
@@ -87,7 +87,7 @@ class LukeFlowCanvasController<T> {
 
   /// # addConnection
   /// Adds a single connection to the canvas.
-  void addConnection(EdgeConnectionsModel connection) {
+  void addConnection(EdgeConnectionsModel<E> connection) {
     _notifier.value = data.copyWith(
       connections: [...data.connections, connection],
     );
@@ -95,7 +95,7 @@ class LukeFlowCanvasController<T> {
 
   /// # removeConnectionWhere
   /// Removes all connections that satisfy the given condition.
-  void removeConnectionWhere(bool Function(EdgeConnectionsModel) test) {
+  void removeConnectionWhere(bool Function(EdgeConnectionsModel<E>) test) {
     _notifier.value = data.copyWith(
       connections: data.connections.where((e) => !test(e)).toList(),
     );
@@ -118,14 +118,14 @@ class LukeFlowCanvasController<T> {
   /// # loadFromJson
   /// Loads canvas data from a decoded JSON map.
   void loadFromJson(Map<String, dynamic> data) {
-    _notifier.value = FlowCanvasModel<T>.fromMap(data);
+    _notifier.value = FlowCanvasModel<T, E>.fromMap(data);
     frame();
   }
 
   /// # loadFromJsonString
   /// Loads canvas data from a JSON string.
   void loadFromJsonString(String data) {
-    _notifier.value = FlowCanvasModel<T>.fromJsonString(data);
+    _notifier.value = FlowCanvasModel<T, E>.fromJsonString(data);
     frame();
   }
 
@@ -197,9 +197,9 @@ class LukeFlowCanvasController<T> {
   }
 
   /// # updateConnection
-  updateConnection(EdgeConnectionsModel edgeConnection) {
+  updateConnection(EdgeConnectionsModel<E> edgeConnection) {
     _notifier.value = data.copyWith(
-      connections: List<EdgeConnectionsModel>.from(
+      connections: List<EdgeConnectionsModel<E>>.from(
         data.connections
             .map((c) => c.id == edgeConnection.id ? edgeConnection : c)
             .toList(),
