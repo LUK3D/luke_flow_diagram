@@ -30,7 +30,7 @@ class LukeFlowCanvasController<T, E> {
 
   /// # nodes
   /// The list of current nodes in the canvas.
-  List<NodeModel<T>> get nodes => data.nodes;
+  List<NodeModel<T, E>> get nodes => data.nodes;
 
   /// # connections
   /// The list of current connections in the canvas.
@@ -67,8 +67,8 @@ class LukeFlowCanvasController<T, E> {
 
   /// # setNodes
   /// Replaces the current nodes with a new list.
-  void setNodes(List<NodeModel<T>> nodes) {
-    _notifier.value = data.copyWith(nodes: List<NodeModel<T>>.from(nodes));
+  void setNodes(List<NodeModel<T, E>> nodes) {
+    _notifier.value = data.copyWith(nodes: List<NodeModel<T, E>>.from(nodes));
   }
 
   /// # setConnections
@@ -81,7 +81,7 @@ class LukeFlowCanvasController<T, E> {
 
   /// # addNodes
   /// Adds a list of nodes to the current canvas.
-  void addNodes(List<NodeModel<T>> newNodes) {
+  void addNodes(List<NodeModel<T, E>> newNodes) {
     _notifier.value = data.copyWith(nodes: [...data.nodes, ...newNodes]);
   }
 
@@ -211,7 +211,7 @@ class LukeFlowCanvasController<T, E> {
   /// # updateNode
   updateNode(NodeModel node) {
     _notifier.value = data.copyWith(
-      nodes: List<NodeModel<T>>.from(
+      nodes: List<NodeModel<T, E>>.from(
         data.nodes.map((n) => n.id == node.id ? node : n).toList(),
       ),
     );

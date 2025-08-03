@@ -20,10 +20,10 @@ class LukeFlowCanvas<T, E> extends StatefulWidget {
   final LukeFlowCanvasController<T, E> controller;
 
   /// Builds a custom widget for each node.
-  final Widget Function(NodeModel<T> node) nodeBuilder;
+  final Widget Function(NodeModel<T, E> node) nodeBuilder;
 
   /// Optionally builds a custom widget for each socket of a node.
-  final Widget Function(NodeModel<T> node, NodeSocketModel socket)?
+  final Widget Function(NodeModel<T, E> node, NodeSocketModel<E> socket)?
   socketBuilder;
 
   final Function(Vector2 position)? onMouseMove;
@@ -36,7 +36,7 @@ class LukeFlowCanvas<T, E> extends StatefulWidget {
 
   /// Callback triggered whenever nodes or connections are updated.
   final Function(
-    List<NodeModel<T>> nodes,
+    List<NodeModel<T, E>> nodes,
     List<EdgeConnectionsModel> connections,
   )?
   onUpdate;
@@ -60,9 +60,9 @@ class LukeFlowCanvas<T, E> extends StatefulWidget {
   final Function(EdgeConnectionsModel connection)? onConnectionError;
 
   /// Occurs when an edge is droped on the canvas without a target
-  final Function(NodeSocketModel source, Vector2 dropPosition)? onEdgeDrop;
+  final Function(NodeSocketModel<E> source, Vector2 dropPosition)? onEdgeDrop;
 
-  final Function(List<NodeModel<T>> deletedNode)? onNodesDeleted;
+  final Function(List<NodeModel<T, E>> deletedNode)? onNodesDeleted;
 
   /// Triggered when user double taps the canvas
   final Function(Vector2 mousePosition)? onDoubleTap;
@@ -71,8 +71,8 @@ class LukeFlowCanvas<T, E> extends StatefulWidget {
   /// It allows modifying the connection or returning null to cancel it.
   final EdgeConnectionsModel<E>? Function(
     EdgeConnectionsModel<E> connection,
-    NodeSocketModel inputSocker,
-    NodeSocketModel outputSocket,
+    NodeSocketModel<E> fromSocket,
+    NodeSocketModel<E> toSocket,
   )?
   onBeforeConnectionCreate;
 
@@ -114,9 +114,9 @@ class LukeFlowCanvas<T, E> extends StatefulWidget {
 /// Handles canvas rendering, user interactions,
 /// edge drawing, and node/socket updates.
 class _LukeFlowCanvasState<T, E> extends State<LukeFlowCanvas<T, E>> {
-  NodeSocketModel? initialSlot;
-  NodeSocketModel? hoveringSlot;
-  NodeSocketModel? ghostSlot;
+  NodeSocketModel<E>? initialSlot;
+  NodeSocketModel<E>? hoveringSlot;
+  NodeSocketModel<E>? ghostSlot;
 
   RenderBox? canvasBox;
   late final TransformationController _transformationController;
@@ -160,7 +160,7 @@ class _LukeFlowCanvasState<T, E> extends State<LukeFlowCanvas<T, E>> {
     }
   }
 
-  createConnection(NodeSocketModel socket, NodeModel<T> node) {
+  createConnection(NodeSocketModel<E> socket, NodeModel<T, E> node) {
     final controller = widget.controller;
 
     EdgeConnectionsModel<E> connection = EdgeConnectionsModel<E>(
@@ -171,13 +171,13 @@ class _LukeFlowCanvasState<T, E> extends State<LukeFlowCanvas<T, E>> {
     final inputConnections = controller.connections.where(
       (c) =>
           (c.source.id == socket.id || c.target.id == socket.id) &&
-          c.data != "luke-ghost-socket",
+          c.id != "luke-ghost-socket",
     );
 
     final outputConnections = controller.connections.where(
       (c) =>
           (c.source.id == initialSlot!.id || c.target.id == initialSlot!.id) &&
-          c.data != "luke-ghost-socket",
+          c.id != "luke-ghost-socket",
     );
 
     if (inputConnections.length >= socket.connectionLimit ||
@@ -225,7 +225,7 @@ class _LukeFlowCanvasState<T, E> extends State<LukeFlowCanvas<T, E>> {
     return null;
   }
 
-  updateNodesPosition(List<NodeModel<T>> nodes) {
+  updateNodesPosition(List<NodeModel<T, E>> nodes) {
     if (_renderedConnections.isEmpty) return;
 
     final updated = _renderedConnections.map((c) {
@@ -450,11 +450,11 @@ class _LukeFlowCanvasState<T, E> extends State<LukeFlowCanvas<T, E>> {
                           onSocketPanStart: (socket, details, node) {
                             initialSlot = socket;
 
-                            ghostSlot = NodeSocketModel(
+                            ghostSlot = NodeSocketModel<E>(
+                              id: "luke-ghost-socket",
                               nodeId: node.id,
                               type: NodeSocketType.inputOutput,
                               position: Vector2(details.dx, details.dy),
-                              data: "luke-ghost-socket",
                             );
 
                             if (canvasBox != null) {

@@ -3,25 +3,45 @@ import 'package:luke_flow_diagram/models/node_model.dart';
 import 'package:luke_flow_diagram/utils/math.dart';
 import 'package:luke_flow_diagram/widgets/flow_controller.dart';
 
-class NodeWidget<T> extends StatefulWidget {
-  final NodeModel<T> node;
-  final Widget Function(NodeModel<T> node) nodeBuilder;
-  final Widget Function(NodeModel<T> node, NodeSocketModel socket)?
+class NodeWidget<T, E> extends StatefulWidget {
+  final NodeModel<T, E> node;
+  final Widget Function(NodeModel<T, E> node) nodeBuilder;
+  final Widget Function(NodeModel<T, E> node, NodeSocketModel<E> socket)?
   socketBuilder;
   final double socketWidth;
   final double socketHeight;
   final double socketRadius;
-  final Function(NodeModel<T> node) onUpdate;
-  final Function(NodeModel<T> node) onPanEnd;
-  final Function(NodeSocketModel socket, Offset details, NodeModel<T> node)
+  final Function(NodeModel<T, E> node) onUpdate;
+  final Function(NodeModel<T, E> node) onPanEnd;
+  final Function(
+    NodeSocketModel<E> socket,
+    Offset details,
+    NodeModel<T, E> node,
+  )
   onSocketPanUpdate;
-  final Function(NodeSocketModel socket, Offset details, NodeModel<T> node)
+  final Function(
+    NodeSocketModel<E> socket,
+    Offset details,
+    NodeModel<T, E> node,
+  )
   onSocketPanEnd;
-  final Function(NodeSocketModel socket, Offset details, NodeModel<T> node)
+  final Function(
+    NodeSocketModel<E> socket,
+    Offset details,
+    NodeModel<T, E> node,
+  )
   onSocketPanStart;
-  final Function(NodeSocketModel socket, Offset details, NodeModel<T> node)
+  final Function(
+    NodeSocketModel<E> socket,
+    Offset details,
+    NodeModel<T, E> node,
+  )
   onSocketMouseEnter;
-  final Function(NodeSocketModel socket, Offset details, NodeModel<T> node)
+  final Function(
+    NodeSocketModel<E> socket,
+    Offset details,
+    NodeModel<T, E> node,
+  )
   onSocketMouseLeave;
   final LukeFlowCanvasController controller;
 
@@ -44,10 +64,10 @@ class NodeWidget<T> extends StatefulWidget {
   });
 
   @override
-  State<NodeWidget<T>> createState() => _NodeWidgetState<T>();
+  State<NodeWidget<T, E>> createState() => _NodeWidgetState<T, E>();
 }
 
-class _NodeWidgetState<T> extends State<NodeWidget<T>> {
+class _NodeWidgetState<T, E> extends State<NodeWidget<T, E>> {
   late Vector2 position;
 
   Widget makeSockets(NodeSocketType type) {

@@ -24,6 +24,12 @@ class DataModelExample {
       color = json['color'] != null ? Color(json['color']) : null;
 }
 
+class ConnectionModelExample {
+  final int type;
+
+  ConnectionModelExample({required this.type});
+}
+
 final diagramJson = {
   "nodes": [
     {

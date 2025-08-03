@@ -38,14 +38,14 @@ class LukeFlowDiagram extends StatefulWidget {
 
 class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
   List<EdgeConnectionsModel> connections = [];
-  List<NodeModel<DataModelExample>> nodes = List.generate(1, (index) => index)
-      .map((i) {
+  List<NodeModel<DataModelExample, ConnectionModelExample>> nodes =
+      List.generate(1, (index) => index).map((i) {
         final nodeId = DateTime.now()
             .add(Duration(seconds: i))
             .microsecondsSinceEpoch
             .toString();
 
-        return NodeModel(
+        return NodeModel<DataModelExample, ConnectionModelExample>(
           id: nodeId,
           inputSockets: [
             NodeSocketModel(
@@ -54,17 +54,15 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
               id: UniqueKey().toString(),
               type: NodeSocketType.input,
               position: Vector2.zero,
-              data: {},
             ),
           ],
           outputSockets: [
-            NodeSocketModel(
+            NodeSocketModel<ConnectionModelExample>(
               connectionLimit: 2,
               nodeId: nodeId,
               id: UniqueKey().toString(),
               type: NodeSocketType.output,
               position: Vector2.zero,
-              data: {},
             ),
           ],
           data: DataModelExample(
@@ -74,10 +72,10 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
           ),
           position: getRandomPositionNearCenter(spread: 1000),
         );
-      })
-      .toList();
+      }).toList();
 
-  final controller = LukeFlowCanvasController<DataModelExample>();
+  final controller =
+      LukeFlowCanvasController<DataModelExample, ConnectionModelExample>();
   List<String> selectedNodes = [];
 
   @override
@@ -121,7 +119,9 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                   onPressed: () {
                     final nodeId = UniqueKey().toString();
                     controller.addNodes(
-                      List<NodeModel<DataModelExample>>.from([
+                      List<
+                        NodeModel<DataModelExample, ConnectionModelExample>
+                      >.from([
                         NodeModel(
                           position: getRandomPositionNearCenter(spread: 1000),
                           inputSockets: [
@@ -201,10 +201,19 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
             ),
           ),
           Expanded(
-            child: LukeFlowCanvas<DataModelExample>(
+            child: LukeFlowCanvas<DataModelExample, ConnectionModelExample>(
               controller: controller,
               onEdgeDrop: (source, dropPosition) {
                 /// You can create a new node when you drop the connection edge on the canvas by using the onEdgeDrop .
+              },
+              onBeforeConnectionCreate: (connection, fromSocket, toSocket) {
+                final c = connection.copyWith(
+                  data: ConnectionModelExample(
+                    type: fromSocket.type == NodeSocketType.input ? 0 : 1,
+                  ),
+                );
+                debugPrint("CONNECTION TYPE: ${c.data?.type}");
+                return c;
               },
               onConnectionError: (connection) {
                 /// This function can be used to handle connection limit error
@@ -224,12 +233,12 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                 final nodeId = UniqueKey().toString();
 
                 /// Create new sockets for the new node
-                final inputSocket = NodeSocketModel(
+                final inputSocket = NodeSocketModel<ConnectionModelExample>(
                   nodeId: nodeId,
                   position: Vector2.zero,
                   type: NodeSocketType.input,
                 );
-                final outputSocket = NodeSocketModel(
+                final outputSocket = NodeSocketModel<ConnectionModelExample>(
                   nodeId: nodeId,
                   position: Vector2.zero,
                   type: NodeSocketType.output,
