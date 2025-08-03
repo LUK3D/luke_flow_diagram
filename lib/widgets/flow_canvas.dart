@@ -37,7 +37,7 @@ class LukeFlowCanvas<T, E> extends StatefulWidget {
   /// Callback triggered whenever nodes or connections are updated.
   final Function(
     List<NodeModel<T, E>> nodes,
-    List<EdgeConnectionsModel> connections,
+    List<EdgeConnectionsModel<E>> connections,
   )?
   onUpdate;
 
@@ -57,7 +57,7 @@ class LukeFlowCanvas<T, E> extends StatefulWidget {
   final BackgroundGridSettings? secondaryBacgrkoundGridSettings;
 
   /// Handles connection error
-  final Function(EdgeConnectionsModel connection)? onConnectionError;
+  final Function(EdgeConnectionsModel<E> connection)? onConnectionError;
 
   /// Occurs when an edge is droped on the canvas without a target
   final Function(NodeSocketModel<E> source, Vector2 dropPosition)? onEdgeDrop;
@@ -79,7 +79,7 @@ class LukeFlowCanvas<T, E> extends StatefulWidget {
   final LukeEdgePainter Function(
     Offset source,
     Offset target,
-    EdgeConnectionsModel edgeConnection,
+    EdgeConnectionsModel<E> edgeConnection,
   )?
   edgeBuilder;
 
@@ -467,7 +467,7 @@ class _LukeFlowCanvasState<T, E> extends State<LukeFlowCanvas<T, E>> {
                               ghostSlot!.position = initialSlot!.position;
                             }
                             setState(() {
-                              ghostConnection = EdgeConnectionsModel(
+                              ghostConnection = EdgeConnectionsModel<E>(
                                 source: ghostSlot!,
                                 target: initialSlot!,
                               );
