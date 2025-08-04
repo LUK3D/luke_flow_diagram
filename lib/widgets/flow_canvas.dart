@@ -5,8 +5,8 @@ import 'package:luke_flow_diagram/models/node_model.dart';
 import 'package:luke_flow_diagram/utils/math.dart';
 import 'package:luke_flow_diagram/widgets/edge.dart';
 import 'package:luke_flow_diagram/widgets/edges/bezier.dart';
-import 'package:luke_flow_diagram/widgets/edges/step.dart';
 import 'custom_interactive_viewer.dart';
+import 'edge_layer.dart';
 import 'flow_controller.dart';
 import 'grid_painter.dart';
 import 'node.dart';
@@ -80,6 +80,7 @@ class LukeFlowCanvas<T, E> extends StatefulWidget {
     Offset source,
     Offset target,
     EdgeConnectionsModel<E> edgeConnection,
+    double dashOffset,
   )?
   edgeBuilder;
 
@@ -92,12 +93,12 @@ class LukeFlowCanvas<T, E> extends StatefulWidget {
     this.socketWidth = 20,
     this.socketHeight = 20,
     this.socketRadius = 100,
-    this.onUpdate,
     this.width = 2024 * 8,
     this.height = 2024 * 8,
-    this.onMouseMove,
     this.bacgrkoundGridSettings,
     this.secondaryBacgrkoundGridSettings,
+    this.onUpdate,
+    this.onMouseMove,
     this.onConnectionError,
     this.onEdgeDrop,
     this.onNodesDeleted,
@@ -347,35 +348,12 @@ class _LukeFlowCanvasState<T, E> extends State<LukeFlowCanvas<T, E>> {
                           },
                         ),
 
-                      ..._renderedConnections.map((c) {
-                        return BezierEdge(
-                          source: c.source,
-                          target: c.target,
-                          isAnimated: c.isAnimated,
-                          dashAnimationSpeed: c.animationSpeed,
-                          painterBuilder:
-                              (source, target, isAnimated, dashOffset) {
-                                return widget.edgeBuilder?.call(
-                                      source,
-                                      target,
-                                      c,
-                                    ) ??
-                                    c.painter ??
-                                    LukeStepEdgePainter(
-                                      source: source,
-                                      target: target,
-                                      isDashed: true,
-                                      color: Colors.pink,
-                                      strokeWidth: 4,
-                                      horizontalStepPercent: 0.7,
-                                      cornerRadius: 30,
-                                      isAnimated: c.isAnimated,
-                                      dashAnimationSpeed: c.animationSpeed,
-                                      dashOffset: dashOffset,
-                                    );
-                              },
-                        );
-                      }),
+                      RepaintBoundary(
+                        child: EdgeLayer<E>(
+                          connections: _renderedConnections,
+                          edgeBuilder: widget.edgeBuilder,
+                        ),
+                      ),
 
                       ...data.nodes.map((node) {
                         return NodeWidget(

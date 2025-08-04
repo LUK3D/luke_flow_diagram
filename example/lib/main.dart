@@ -1,6 +1,7 @@
 import 'package:example/data.dart';
 import 'package:flutter/material.dart';
 import 'package:luke_flow_diagram/luke_flow_diagram.dart';
+import 'package:luke_flow_diagram/widgets/edges/step.dart';
 import 'utils.dart';
 
 void main() {
@@ -175,6 +176,14 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                 ),
                 TextButton(
                   onPressed: () {
+                    controller.removeNodeWhere(
+                      (n) => n.id == selectedNodes.firstOrNull,
+                    );
+                  },
+                  child: Text("Delete Selected"),
+                ),
+                TextButton(
+                  onPressed: () {
                     controller.viewController.animateZoomTo(2.0);
                     controller.viewController.animateZoomAndPanTo(
                       targetOffset: Offset(300, 200),
@@ -288,6 +297,20 @@ class _LukeFlowDiagramState extends State<LukeFlowDiagram> {
                       ),
                     ),
                   ),
+                );
+              },
+              edgeBuilder: (source, target, edgeConnection, dashOffset) {
+                return LukeStepEdgePainter(
+                  dashAnimationSpeed: 1,
+                  source: source,
+                  target: target,
+                  isAnimated: edgeConnection.isAnimated,
+                  isDashed: true,
+                  horizontalStepPercent: 0.5,
+                  color: Colors.pink,
+                  strokeWidth: 6,
+                  cornerRadius: 30,
+                  dashOffset: dashOffset,
                 );
               },
               onUpdate: (n, c) {

@@ -104,8 +104,23 @@ class LukeFlowCanvasController<T, E> {
   /// # removeNodeWhere
   /// Removes all nodes that satisfy the given condition.
   void removeNodeWhere(bool Function(NodeModel) test) {
+    List<String> deletedNodes = [];
+    final finalNodes = data.nodes.where((e) {
+      final res = !test(e);
+      if (!res) {
+        deletedNodes.add(e.id);
+      }
+      return res;
+    }).toList();
     _notifier.value = data.copyWith(
-      nodes: data.nodes.where((e) => !test(e)).toList(),
+      nodes: finalNodes,
+      connections: connections
+          .where(
+            (e) =>
+                !deletedNodes.contains(e.source.nodeId) &&
+                !deletedNodes.contains(e.target.nodeId),
+          )
+          .toList(),
     );
   }
 
