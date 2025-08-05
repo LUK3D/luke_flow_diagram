@@ -140,4 +140,22 @@ class NodeModel<T, E> {
       outputSockets: outputSockets.map((s) => s.copy()).toList(),
     );
   }
+
+  NodeModel<T, E> copyWith({
+    Vector2? position,
+    String? id,
+    T? data,
+    List<NodeSocketModel<E>>? inputSockets,
+    List<NodeSocketModel<E>>? outputSockets,
+  }) {
+    return NodeModel<T, E>(
+      position: position ?? this.position.copy(),
+      id: id ?? this.id,
+      data: data ?? this.data,
+      inputSockets:
+          inputSockets ?? this.inputSockets.map((s) => s.copy()).toList(),
+      outputSockets:
+          outputSockets ?? this.outputSockets.map((s) => s.copy()).toList(),
+    );
+  }
 }
